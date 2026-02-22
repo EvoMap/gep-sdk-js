@@ -1,0 +1,33 @@
+{
+  "name": "@evomap/gep-sdk",
+  "version": "1.0.0",
+  "description": "SDK for the Gene Expression Protocol (GEP) -- enables AI agents to self-evolve",
+  "main": "src/index.js",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./content-hash": "./src/contentHash.js",
+    "./gene": "./src/gene.js",
+    "./capsule": "./src/capsule.js",
+    "./mutation": "./src/mutation.js",
+    "./signals": "./src/signals.js",
+    "./selector": "./src/selector.js",
+    "./memory-graph": "./src/memoryGraph.js",
+    "./asset-store": "./src/assetStore.js",
+    "./portable": "./src/portable.js"
+  },
+  "keywords": ["gep", "ai", "agent", "evolution", "self-evolution", "mcp", "evomap"],
+  "author": "EvoMap",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/evomap-ai/gep-sdk-js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {}
+}
