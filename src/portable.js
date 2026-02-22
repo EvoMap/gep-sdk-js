@@ -1,6 +1,6 @@
-import { execSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync, appendFileSync, mkdirSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync, writeFileSync, appendFileSync, mkdirSync, rmSync } from 'node:fs';
+import { join, dirname, basename } from 'node:path';
 import { createHash } from 'node:crypto';
 import { SCHEMA_VERSION } from './contentHash.js';
 
@@ -60,15 +60,16 @@ export function exportGepx({ assetsDir, memoryGraphPath, outputPath, agentId, ag
   writeFileSync(join(tmpDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
   writeFileSync(join(tmpDir, 'checksum.sha256'), checksums.join('\n') + '\n');
 
-  execSync(`tar -czf "${outputPath}" -C "${dirname(tmpDir)}" "${tmpDir.split('/').pop()}"`, { timeout: 30000 });
-  execSync(`rm -rf "${tmpDir}"`, { timeout: 5000 });
+  execFileSync('tar', ['-czf', outputPath, '-C', tmpDir, '.'], { timeout: 30000 });
+  rmSync(tmpDir, { recursive: true, force: true });
 
   return { outputPath, manifest };
 }
 
 export function importGepx({ gepxPath, assetsDir, memoryGraphPath, merge = true }) {
   const tmpDir = `${gepxPath}.extracted`;
-  execSync(`mkdir -p "${tmpDir}" && tar -xzf "${gepxPath}" -C "${tmpDir}" --strip-components=1`, { timeout: 30000 });
+  mkdirSync(tmpDir, { recursive: true });
+  execFileSync('tar', ['-xzf', gepxPath, '-C', tmpDir, '--strip-components=1'], { timeout: 30000 });
 
   const manifestPath = join(tmpDir, 'manifest.json');
   if (!existsSync(manifestPath)) throw new Error('Invalid .gepx: missing manifest.json');
@@ -94,7 +95,7 @@ export function importGepx({ gepxPath, assetsDir, memoryGraphPath, merge = true 
     }
   }
 
-  execSync(`rm -rf "${tmpDir}"`, { timeout: 5000 });
+  rmSync(tmpDir, { recursive: true, force: true });
   return { manifest, merged: merge };
 }
 
