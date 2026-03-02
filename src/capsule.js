@@ -1,6 +1,6 @@
 import { SCHEMA_VERSION, computeAssetId } from './contentHash.js';
 
-export function createCapsule({ trigger, gene, summary, confidence, blastRadius, outcome, envFingerprint }) {
+export function createCapsule({ trigger, gene, summary, confidence, blastRadius, outcome, envFingerprint, triggerContext }) {
   const capsule = {
     type: 'Capsule',
     schema_version: SCHEMA_VERSION,
@@ -21,6 +21,14 @@ export function createCapsule({ trigger, gene, summary, confidence, blastRadius,
     env_fingerprint: envFingerprint || null,
     a2a: { eligible_to_broadcast: false },
   };
+  if (triggerContext && typeof triggerContext === 'object') {
+    capsule.trigger_context = {};
+    if (typeof triggerContext.prompt === 'string') capsule.trigger_context.prompt = triggerContext.prompt.slice(0, 2000);
+    if (typeof triggerContext.reasoningTrace === 'string') capsule.trigger_context.reasoning_trace = triggerContext.reasoningTrace.slice(0, 4000);
+    if (Array.isArray(triggerContext.contextSignals)) capsule.trigger_context.context_signals = triggerContext.contextSignals;
+    if (typeof triggerContext.sessionId === 'string') capsule.trigger_context.session_id = triggerContext.sessionId;
+    if (typeof triggerContext.agentModel === 'string') capsule.trigger_context.agent_model = triggerContext.agentModel;
+  }
   capsule.asset_id = computeAssetId(capsule);
   return capsule;
 }

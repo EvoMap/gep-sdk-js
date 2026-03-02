@@ -7,3 +7,4 @@ export { selectGene, selectCapsule, selectGeneAndCapsule } from './selector.js';
 export { MemoryGraph, computeSignalKey } from './memoryGraph.js';
 export { AssetStore } from './assetStore.js';
 export { exportGepx, importGepx } from './portable.js';
+export { checkGitRepo, requireGitRepo } from './env.js';

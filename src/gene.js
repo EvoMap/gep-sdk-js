@@ -59,6 +59,8 @@ export function matchPatternToSignals(pattern, signals) {
   if (!pattern || !signals || signals.length === 0) return false;
   const p = String(pattern);
   const sig = signals.map(s => String(s));
+
+  // Regex pattern: /body/flags
   if (p.length >= 2 && p.startsWith('/') && p.lastIndexOf('/') > 0) {
     const lastSlash = p.lastIndexOf('/');
     const body = p.slice(1, lastSlash);
@@ -68,6 +70,13 @@ export function matchPatternToSignals(pattern, signals) {
       return sig.some(s => re.test(s));
     } catch { /* fallback */ }
   }
+
+  // Multi-language alias: "en_term|zh_term|ja_term" -- any branch matching = hit
+  if (p.includes('|') && !p.startsWith('/')) {
+    const branches = p.split('|').map(b => b.trim().toLowerCase()).filter(Boolean);
+    return branches.some(needle => sig.some(s => s.toLowerCase().includes(needle)));
+  }
+
   const needle = p.toLowerCase();
   return sig.some(s => s.toLowerCase().includes(needle));
 }
