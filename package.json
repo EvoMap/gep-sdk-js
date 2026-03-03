@@ -1,7 +1,7 @@
 {
   "name": "@evomap/gep-sdk",
   "version": "1.0.0",
-  "description": "SDK for the Gene Expression Protocol (GEP) -- enables AI agents to self-evolve",
+  "description": "SDK for the Genome Evolution Protocol (GEP) -- enables AI agents to self-evolve",
   "main": "src/index.js",
   "type": "module",
   "exports": {
