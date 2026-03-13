@@ -5,6 +5,10 @@ import { createHash } from 'node:crypto';
 import { SCHEMA_VERSION } from './contentHash.js';
 
 export function exportGepx({ assetsDir, memoryGraphPath, outputPath, agentId, agentName }) {
+  const resolved = join(outputPath);
+  if (!resolved.startsWith(join(assetsDir)) && !resolved.startsWith(join(dirname(memoryGraphPath)))) {
+    throw new Error('outputPath must be within assetsDir or memoryGraphPath parent directory');
+  }
   const tmpDir = `${outputPath}.tmp`;
   mkdirSync(join(tmpDir, 'genes'), { recursive: true });
   mkdirSync(join(tmpDir, 'capsules'), { recursive: true });
@@ -54,13 +58,18 @@ export function exportGepx({ assetsDir, memoryGraphPath, outputPath, agentId, ag
       total_capsules: capsules,
       memory_graph_entries: memoryEntries,
     },
-    source: { platform: 'gep-sdk-js', version: '1.0.0' },
+    source: { platform: 'gep-sdk-js', version: '1.0.1' },
   };
 
   writeFileSync(join(tmpDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
   writeFileSync(join(tmpDir, 'checksum.sha256'), checksums.join('\n') + '\n');
 
-  execFileSync('tar', ['-czf', outputPath, '-C', tmpDir, '.'], { timeout: 30000 });
+  try {
+    execFileSync('tar', ['-czf', outputPath, '-C', tmpDir, '.'], { timeout: 30000 });
+  } catch (err) {
+    rmSync(tmpDir, { recursive: true, force: true });
+    throw new Error(`tar failed: ${err.message}. Ensure tar is available on your system.`);
+  }
   rmSync(tmpDir, { recursive: true, force: true });
 
   return { outputPath, manifest };
@@ -69,7 +78,12 @@ export function exportGepx({ assetsDir, memoryGraphPath, outputPath, agentId, ag
 export function importGepx({ gepxPath, assetsDir, memoryGraphPath, merge = true }) {
   const tmpDir = `${gepxPath}.extracted`;
   mkdirSync(tmpDir, { recursive: true });
-  execFileSync('tar', ['-xzf', gepxPath, '-C', tmpDir, '--strip-components=1'], { timeout: 30000 });
+  try {
+    execFileSync('tar', ['-xzf', gepxPath, '-C', tmpDir, '--strip-components=1'], { timeout: 30000 });
+  } catch (err) {
+    rmSync(tmpDir, { recursive: true, force: true });
+    throw new Error(`tar extract failed: ${err.message}. Ensure tar is available on your system.`);
+  }
 
   const manifestPath = join(tmpDir, 'manifest.json');
   if (!existsSync(manifestPath)) throw new Error('Invalid .gepx: missing manifest.json');

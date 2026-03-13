@@ -1,13 +1,9 @@
-import { execSync } from 'child_process';
+import { execFileSync } from 'node:child_process';
 
-/**
- * Check whether a directory is inside a git repository.
- * Returns { ok, gitDir } on success, { ok: false, error } on failure.
- */
 export function checkGitRepo(cwd) {
   const dir = cwd || process.cwd();
   try {
-    const gitDir = execSync('git rev-parse --git-dir', {
+    const gitDir = execFileSync('git', ['rev-parse', '--git-dir'], {
       cwd: dir, encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'], timeout: 5000,
     }).trim();
@@ -17,10 +13,6 @@ export function checkGitRepo(cwd) {
   }
 }
 
-/**
- * Assert that the working directory is a git repo.
- * Throws with a clear message if not.
- */
 export function requireGitRepo(cwd) {
   const result = checkGitRepo(cwd);
   if (!result.ok) {

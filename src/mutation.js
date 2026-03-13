@@ -41,7 +41,7 @@ function inferCategory(signals) {
     'user_feature_request', 'user_improvement_suggestion', 'capability_gap',
     'stable_success_plateau', 'external_opportunity', 'force_innovation_after_repair_loop',
   ];
-  if (list.some(s => OPPORTUNITY_MARKERS.includes(s))) return 'innovate';
+  if (list.some(s => OPPORTUNITY_MARKERS.some(m => s === m || s.startsWith(m + ':')))) return 'innovate';
   return 'optimize';
 }
 
