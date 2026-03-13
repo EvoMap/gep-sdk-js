@@ -17,11 +17,14 @@
     "./portable": "./src/portable.js"
   },
   "keywords": ["gep", "ai", "agent", "evolution", "self-evolution", "mcp", "evomap"],
+  "files": [
+    "src"
+  ],
   "author": "EvoMap",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/evomap-ai/gep-sdk-js"
+    "url": "https://github.com/EvoMap/gep-sdk-js"
   },
   "engines": {
     "node": ">=18.0.0"
