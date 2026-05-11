@@ -128,7 +128,14 @@ export function hasOpportunitySignal(signals) {
 
 export function analyzeRecentHistory(recentEvents) {
   if (!Array.isArray(recentEvents) || recentEvents.length === 0) {
-    return { suppressedSignals: new Set(), recentIntents: [], consecutiveRepairCount: 0 };
+    return {
+      suppressedSignals: new Set(),
+      recentIntents: [],
+      consecutiveRepairCount: 0,
+      consecutiveFailureCount: 0,
+      recentFailureRatio: 0,
+      signalFreq: {},
+    };
   }
   const recent = recentEvents.slice(-10);
   let consecutiveRepairCount = 0;
@@ -137,9 +144,19 @@ export function analyzeRecentHistory(recentEvents) {
     else break;
   }
 
+  // Trailing failure streak (regardless of intent). Lets callers detect
+  // "you've been failing N times in a row" and back off / pivot.
+  let consecutiveFailureCount = 0;
+  for (let i = recent.length - 1; i >= 0; i--) {
+    if (recent[i].outcome && recent[i].outcome.status === 'failed') consecutiveFailureCount++;
+    else break;
+  }
+
   const signalFreq = {};
   const tail = recent.slice(-8);
+  let failureCount = 0;
   for (const evt of tail) {
+    if (evt.outcome && evt.outcome.status === 'failed') failureCount++;
     const sigs = Array.isArray(evt.signals) ? evt.signals : [];
     for (const s of sigs) {
       const key = String(s).startsWith('errsig:') ? 'errsig'
@@ -155,7 +172,14 @@ export function analyzeRecentHistory(recentEvents) {
     if (count >= 3) suppressedSignals.add(key);
   }
 
-  return { suppressedSignals, recentIntents: recent.map(e => e.intent || 'unknown'), consecutiveRepairCount };
+  return {
+    suppressedSignals,
+    recentIntents: recent.map(e => e.intent || 'unknown'),
+    consecutiveRepairCount,
+    consecutiveFailureCount,
+    recentFailureRatio: tail.length > 0 ? failureCount / tail.length : 0,
+    signalFreq,
+  };
 }
 
 export { OPPORTUNITY_SIGNALS };

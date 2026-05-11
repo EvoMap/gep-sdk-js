@@ -76,10 +76,13 @@ test('hasOpportunitySignal: detects opportunity name with snippet suffix', () =>
   assert.equal(hasOpportunitySignal(['user_feature_request:add a feature']), true);
 });
 
-test('analyzeRecentHistory: empty input returns zeros', () => {
+test('analyzeRecentHistory: empty input returns zero defaults', () => {
   const r = analyzeRecentHistory([]);
   assert.equal(r.consecutiveRepairCount, 0);
   assert.equal(r.suppressedSignals.size, 0);
+  assert.equal(r.consecutiveFailureCount, 0);
+  assert.equal(r.recentFailureRatio, 0);
+  assert.deepEqual(r.signalFreq, {});
 });
 
 test('analyzeRecentHistory: counts consecutive repair tail', () => {
@@ -89,6 +92,42 @@ test('analyzeRecentHistory: counts consecutive repair tail', () => {
     { intent: 'repair' },
   ]);
   assert.equal(r.consecutiveRepairCount, 2);
+});
+
+test('analyzeRecentHistory: counts consecutive failure tail (v1.1.0)', () => {
+  const r = analyzeRecentHistory([
+    { outcome: { status: 'success' } },
+    { outcome: { status: 'failed' } },
+    { outcome: { status: 'failed' } },
+    { outcome: { status: 'failed' } },
+  ]);
+  assert.equal(r.consecutiveFailureCount, 3);
+});
+
+test('analyzeRecentHistory: recentFailureRatio over last 8 (v1.1.0)', () => {
+  const events = [
+    { outcome: { status: 'success' } },
+    { outcome: { status: 'success' } },
+    { outcome: { status: 'success' } },
+    { outcome: { status: 'success' } },
+    { outcome: { status: 'failed' } },
+    { outcome: { status: 'failed' } },
+    { outcome: { status: 'failed' } },
+    { outcome: { status: 'success' } },
+  ];
+  const r = analyzeRecentHistory(events);
+  assert.equal(r.recentFailureRatio, 3 / 8);
+});
+
+test('analyzeRecentHistory: signalFreq normalizes prefixes (v1.1.0)', () => {
+  const r = analyzeRecentHistory([
+    { signals: ['user_feature_request:add foo'] },
+    { signals: ['user_feature_request:add bar'] },
+    { signals: ['log_error', 'errsig:Error: x'] },
+  ]);
+  assert.equal(r.signalFreq.user_feature_request, 2);
+  assert.equal(r.signalFreq.log_error, 1);
+  assert.equal(r.signalFreq.errsig, 1);
 });
 
 test('OPPORTUNITY_SIGNALS: contains baseline names', () => {
