@@ -7,6 +7,7 @@ import {
   selectGeneAndCapsule,
   banGenesFromFailedCapsules,
   computeSignalOverlap,
+  computeDriftIntensity,
 } from '../src/selector.js';
 import { createGene } from '../src/gene.js';
 
@@ -216,6 +217,91 @@ test('selectGeneAndCapsule: failedCapsules bans recurring failure', () => {
     failedCapsules: failed,
   });
   assert.equal(r.selectedGene.id, 'gene_b');
+});
+
+test('computeDriftIntensity: returns 0 with no genes', () => {
+  assert.equal(computeDriftIntensity({}), 0);
+  assert.equal(computeDriftIntensity({ genePoolSize: 0 }), 0);
+});
+
+test('computeDriftIntensity: drift disabled = 1/sqrt(N)', () => {
+  const v = computeDriftIntensity({ genePoolSize: 100 });
+  assert.ok(Math.abs(v - 0.1) < 1e-9, `expected 0.1, got ${v}`);
+});
+
+test('computeDriftIntensity: drift enabled with no maturity uses 0.3 offset', () => {
+  // Ne=100, memoryEvidence=0 → maturity=0 → offset=0.3
+  // intensity = 1/10 + 0.3 = 0.4
+  const v = computeDriftIntensity({ driftEnabled: true, genePoolSize: 100 });
+  assert.ok(Math.abs(v - 0.4) < 1e-9, `expected 0.4, got ${v}`);
+});
+
+test('computeDriftIntensity: maturity decays offset toward 0.02 (v1.1.0)', () => {
+  // Ne=100, memoryEvidence = 100 * 10 = 1000 → maturity=1 → offset=0.02
+  // intensity = 1/10 + 0.02 = 0.12
+  const mature = computeDriftIntensity({
+    driftEnabled: true,
+    genePoolSize: 100,
+    memoryEvidence: 1000,
+  });
+  assert.ok(Math.abs(mature - 0.12) < 1e-9, `expected 0.12, got ${mature}`);
+  // Half mature → offset = 0.3 - (0.3 - 0.02) * 0.5 = 0.16
+  const half = computeDriftIntensity({
+    driftEnabled: true,
+    genePoolSize: 100,
+    memoryEvidence: 500,
+  });
+  assert.ok(Math.abs(half - (0.1 + 0.16)) < 1e-9, `expected 0.26, got ${half}`);
+});
+
+test('computeDriftIntensity: effectivePopulationSize overrides genePoolSize', () => {
+  const a = computeDriftIntensity({ effectivePopulationSize: 100, genePoolSize: 1 });
+  const b = computeDriftIntensity({ genePoolSize: 100 });
+  assert.equal(a, b);
+});
+
+test('computeDriftIntensity: driftEnabled with Ne <= 1 returns 0.7', () => {
+  assert.equal(computeDriftIntensity({ driftEnabled: true, genePoolSize: 1 }), 0.7);
+  assert.equal(computeDriftIntensity({ driftEnabled: true, genePoolSize: 0 }), 0.7);
+});
+
+test('selectGene: plateauOverride severity=required pins drift to 1.0', () => {
+  // Without plateau: ne=52 → driftIntensity ≈ 0.139 (< 0.15, useDrift=false)
+  // With plateau severity=required → driftIntensity = max(0.139, 1.0) = 1.0
+  const g = makeGene('gene_a', ['log_error']);
+  const r = selectGene([g, ...makeFiller()], ['log_error'], {
+    plateauOverride: { active: true, severity: 'required' },
+  });
+  assert.equal(r.driftIntensity, 1);
+});
+
+test('selectGene: plateauOverride severity=suggested raises drift to 0.7 floor', () => {
+  const g = makeGene('gene_a', ['log_error']);
+  const r = selectGene([g, ...makeFiller()], ['log_error'], {
+    plateauOverride: { active: true, severity: 'suggested' },
+  });
+  assert.equal(r.driftIntensity, 0.7);
+});
+
+test('selectGene: plateauOverride active=false is ignored', () => {
+  const g = makeGene('gene_a', ['log_error']);
+  const r = selectGene([g, ...makeFiller()], ['log_error'], {
+    plateauOverride: { active: false, severity: 'required' },
+  });
+  assert.ok(r.driftIntensity < 0.5, `expected < 0.5, got ${r.driftIntensity}`);
+});
+
+test('selectGeneAndCapsule: passes plateauOverride and totalAttempts through', () => {
+  const g = makeGene('gene_a', ['log_error']);
+  const r = selectGeneAndCapsule({
+    genes: [g, ...makeFiller()],
+    capsules: [],
+    signals: ['log_error'],
+    memoryAdvice: { totalAttempts: 1000 },
+    driftEnabled: true,
+    plateauOverride: { active: true, severity: 'required' },
+  });
+  assert.equal(r.driftIntensity, 1);
 });
 
 test('selectGeneAndCapsule: failedCapsules merges with memoryAdvice.bannedGeneIds', () => {

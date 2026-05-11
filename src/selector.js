@@ -13,11 +13,26 @@ export function selectGene(genes, signals, opts = {}) {
   const bannedGeneIds = opts.bannedGeneIds || new Set();
   const preferredGeneId = opts.preferredGeneId || null;
   const driftEnabled = !!opts.driftEnabled;
+  const plateauOverride = opts.plateauOverride && typeof opts.plateauOverride === 'object'
+    ? opts.plateauOverride
+    : null;
 
-  const driftIntensity = computeDriftIntensity({
+  let driftIntensity = computeDriftIntensity({
     driftEnabled,
     genePoolSize: genes?.length || 0,
+    effectivePopulationSize: opts.effectivePopulationSize,
+    memoryEvidence: opts.memoryEvidence,
   });
+
+  // Plateau override forces high exploration when the caller has detected
+  // that exploitation is no longer making progress. severity='required'
+  // pins drift to 1.0 (uniform random over top); 'suggested' raises it
+  // to at least 0.7. Applied as a floor, never reduces existing intensity.
+  if (plateauOverride && plateauOverride.active) {
+    const floor = plateauOverride.severity === 'required' ? 1.0 : 0.7;
+    driftIntensity = Math.max(driftIntensity, floor);
+  }
+
   const useDrift = driftEnabled || driftIntensity > 0.15;
 
   let scored = (genes || [])
@@ -85,11 +100,18 @@ export function selectGeneAndCapsule({
   memoryAdvice,
   driftEnabled,
   failedCapsules,
+  plateauOverride,
+  effectivePopulationSize,
 }) {
   const baseBans = memoryAdvice?.bannedGeneIds instanceof Set
     ? memoryAdvice.bannedGeneIds
     : new Set();
   const preferredGeneId = memoryAdvice?.preferredGeneId || null;
+  // memoryAdvice.totalAttempts feeds the maturity decay in
+  // computeDriftIntensity; treated as 0 if absent.
+  const memoryEvidence = Number.isFinite(Number(memoryAdvice?.totalAttempts))
+    ? Number(memoryAdvice.totalAttempts)
+    : 0;
 
   const effectiveBans = banGenesFromFailedCapsules(
     Array.isArray(failedCapsules) ? failedCapsules : [],
@@ -101,6 +123,9 @@ export function selectGeneAndCapsule({
     bannedGeneIds: effectiveBans,
     preferredGeneId,
     driftEnabled,
+    plateauOverride,
+    effectivePopulationSize,
+    memoryEvidence,
   });
   const capsule = selectCapsule(capsules, signals);
 
@@ -143,9 +168,35 @@ export function computeSignalOverlap(signalsA, signalsB) {
   return hits / Math.max(signalsA.length, 1);
 }
 
-function computeDriftIntensity({ driftEnabled, genePoolSize }) {
-  const ne = genePoolSize || 0;
-  if (driftEnabled) return ne > 1 ? Math.min(1, 1 / Math.sqrt(ne) + 0.3) : 0.7;
+// Population-size-dependent drift intensity with adaptive maturity decay.
+// Base formula: intensity = 1 / sqrt(Ne) + offset
+// The offset starts at DRIFT_OFFSET_MAX (0.3, exploration-favored) and
+// decays toward DRIFT_OFFSET_MIN (0.02, exploitation-favored) as the
+// memory graph accumulates evidence (memoryEvidence ≥ Ne *
+// MATURITY_ATTEMPTS_PER_GENE). This addresses the v1.0.x drift-dominance
+// finding where the fixed 0.3 offset overwhelms memory graph guidance.
+const MATURITY_ATTEMPTS_PER_GENE = 10;
+const DRIFT_OFFSET_MAX = 0.3;
+const DRIFT_OFFSET_MIN = 0.02;
+
+export function computeDriftIntensity(opts = {}) {
+  const driftEnabled = !!opts.driftEnabled;
+  const ne = Number.isFinite(Number(opts.effectivePopulationSize))
+    ? Number(opts.effectivePopulationSize)
+    : (Number.isFinite(Number(opts.genePoolSize)) ? Number(opts.genePoolSize) : 0);
+
+  if (driftEnabled) {
+    if (!ne || ne <= 1) return 0.7;
+    const memoryEvidence = Number.isFinite(Number(opts.memoryEvidence))
+      ? Number(opts.memoryEvidence)
+      : 0;
+    const maturityThreshold = ne * MATURITY_ATTEMPTS_PER_GENE;
+    const maturity = maturityThreshold > 0
+      ? Math.min(1, memoryEvidence / maturityThreshold)
+      : 0;
+    const offset = DRIFT_OFFSET_MAX - (DRIFT_OFFSET_MAX - DRIFT_OFFSET_MIN) * maturity;
+    return Math.min(1, 1 / Math.sqrt(ne) + offset);
+  }
   if (ne > 0) return Math.min(1, 1 / Math.sqrt(ne));
   return 0;
 }

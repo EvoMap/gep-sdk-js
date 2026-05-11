@@ -9,6 +9,7 @@ export {
   selectGeneAndCapsule,
   banGenesFromFailedCapsules,
   computeSignalOverlap,
+  computeDriftIntensity,
 } from './selector.js';
 export { MemoryGraph, computeSignalKey } from './memoryGraph.js';
 export { AssetStore } from './assetStore.js';
