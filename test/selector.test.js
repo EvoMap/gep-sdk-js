@@ -22,19 +22,12 @@ function makeFiller(count = 50) {
   return Array.from({ length: count }, (_, i) => makeGene(`gene_filler_${i}`, ['unrelated_signal_x']));
 }
 
-test('selectGene: returns highest-scoring gene (majority over 100 trials)', () => {
-  // v1.0.x has a soft-drift edge: random selection inside selectGene is
-  // gated by driftIntensity > 0 (not useDrift), so even with N=52 there is
-  // a ~14% chance of jitter. Track via statistical majority; v1.1.0 P1 fix
-  // will tighten the gate and a deterministic assertion will replace this.
+test('selectGene: returns highest-scoring gene', () => {
   const g1 = makeGene('gene_a', ['log_error']);
   const g2 = makeGene('gene_b', ['log_error', 'perf_bottleneck']);
-  let bWins = 0;
-  for (let i = 0; i < 100; i++) {
-    const r = selectGene([g1, g2, ...makeFiller()], ['log_error', 'perf_bottleneck']);
-    if (r.selected && r.selected.id === 'gene_b') bWins++;
-  }
-  assert.ok(bWins >= 70, `gene_b should win > 70% of trials, got ${bWins}/100`);
+  const r = selectGene([g1, g2, ...makeFiller()], ['log_error', 'perf_bottleneck']);
+  assert.equal(r.selected.id, 'gene_b');
+  assert.equal(r.alternatives[0].id, 'gene_a');
 });
 
 test('selectGene: empty pool returns null selected', () => {
@@ -48,16 +41,11 @@ test('selectGene: no matching signals returns null selected', () => {
   assert.equal(r.selected, null);
 });
 
-test('selectGene: distilled gets 0.8x score penalty (majority over 100 trials)', () => {
-  // Same soft-drift edge as above. Statistical majority for now.
+test('selectGene: distilled gets 0.8x score penalty when tied on signal match', () => {
   const distilled = makeGene('gene_distilled_x', ['log_error']);
   const regular = makeGene('gene_regular', ['log_error']);
-  let regularWins = 0;
-  for (let i = 0; i < 100; i++) {
-    const r = selectGene([distilled, regular, ...makeFiller()], ['log_error']);
-    if (r.selected && r.selected.id === 'gene_regular') regularWins++;
-  }
-  assert.ok(regularWins >= 70, `regular should win > 70% of trials, got ${regularWins}/100`);
+  const r = selectGene([distilled, regular, ...makeFiller()], ['log_error']);
+  assert.equal(r.selected.id, 'gene_regular');
 });
 
 test('selectGene: bannedGeneIds excludes banned gene (large pool)', () => {
@@ -69,28 +57,61 @@ test('selectGene: bannedGeneIds excludes banned gene (large pool)', () => {
   assert.equal(r.selected.id, 'gene_b');
 });
 
-test('selectGene: bannedGeneIds bypassed by drift on small pool (1.0.x known issue)', () => {
-  // Documents v1.0.x behavior: 2-gene pool → driftIntensity ≈ 0.707, drift
-  // auto-activates and lets a banned gene be re-selected. Tracked as a P1
-  // fix scheduled for v1.1.0; this test will be replaced by an unconditional
-  // ban assertion once fixed.
+test('selectGene: bannedGeneIds always blocks even on small pool (v1.1.0 fix)', () => {
+  // Regression for v1.0.x bypass: with a 2-gene pool, drift used to skip
+  // bannedGeneIds. Post-fix, bans are hard suppression in all modes.
   const g1 = makeGene('gene_a', ['log_error']);
   const g2 = makeGene('gene_b', ['log_error']);
-  let leaks = 0;
   for (let i = 0; i < 100; i++) {
     const r = selectGene([g1, g2], ['log_error'], { bannedGeneIds: new Set(['gene_a']) });
-    if (r.selected && r.selected.id === 'gene_a') leaks++;
+    assert.equal(r.selected.id, 'gene_b', `trial ${i}: banned gene_a leaked`);
   }
-  assert.ok(leaks > 0, 'v1.0.x should leak banned gene_a at least once over 100 trials');
 });
 
-test('selectGene: preferredGeneId overrides natural ordering', () => {
+test('selectGene: preferredGeneId boosts but does not override stronger match (v1.1.0)', () => {
+  // v1.0.x hard override: preferred always won regardless of score, leading
+  // to the negative-feedback loop where popular genes spread into unfit
+  // contexts. Post-fix: 1.5x soft multiplier, so gene_a (score 2) still
+  // beats gene_b (1 × 1.5 = 1.5).
   const g1 = makeGene('gene_a', ['log_error', 'perf_bottleneck']);
   const g2 = makeGene('gene_b', ['log_error']);
   const r = selectGene([g1, g2, ...makeFiller()], ['log_error', 'perf_bottleneck'], {
     preferredGeneId: 'gene_b',
   });
+  assert.equal(r.selected.id, 'gene_a');
+});
+
+test('selectGene: preferredGeneId boost wins on ties (v1.1.0)', () => {
+  // When base scores are equal, the 1.5x multiplier promotes the preferred
+  // gene above its peer.
+  const g1 = makeGene('gene_a', ['log_error']);
+  const g2 = makeGene('gene_b', ['log_error']);
+  const r = selectGene([g1, g2, ...makeFiller()], ['log_error'], {
+    preferredGeneId: 'gene_b',
+  });
   assert.equal(r.selected.id, 'gene_b');
+});
+
+test('selectGene: preferredGeneId on banned gene is ignored (v1.1.0)', () => {
+  // Memory preference must not leak a banned gene back into selection.
+  const g1 = makeGene('gene_a', ['log_error']);
+  const g2 = makeGene('gene_b', ['log_error']);
+  const r = selectGene([g1, g2, ...makeFiller()], ['log_error'], {
+    preferredGeneId: 'gene_a',
+    bannedGeneIds: new Set(['gene_a']),
+  });
+  assert.equal(r.selected.id, 'gene_b');
+});
+
+test('selectGene: deterministic when useDrift = false (v1.1.0)', () => {
+  // Random drift jitter is now gated by useDrift. With drift dormant
+  // (large pool, driftEnabled = false), selection is deterministic.
+  const top = makeGene('gene_top', ['log_error', 'perf_bottleneck']);
+  const second = makeGene('gene_second', ['log_error']);
+  for (let i = 0; i < 100; i++) {
+    const r = selectGene([top, second, ...makeFiller()], ['log_error', 'perf_bottleneck']);
+    assert.equal(r.selected.id, 'gene_top', `trial ${i}: jitter leaked under useDrift=false`);
+  }
 });
 
 test('selectCapsule: returns capsule with highest matching trigger count', () => {
