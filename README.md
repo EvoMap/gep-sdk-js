@@ -84,4 +84,4 @@ Supports EN, ZH-CN, ZH-TW, and JA for opportunity signals (feature requests, imp
 
 ## License
 
-MIT
+GPL-3.0-or-later. See [LICENSE](./LICENSE).
