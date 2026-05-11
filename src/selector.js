@@ -78,16 +78,69 @@ export function selectCapsule(capsules, signals) {
   return scored.length > 0 ? scored[0].capsule : null;
 }
 
-export function selectGeneAndCapsule({ genes, capsules, signals, memoryAdvice, driftEnabled }) {
-  const bannedGeneIds = memoryAdvice?.bannedGeneIds || new Set();
+export function selectGeneAndCapsule({
+  genes,
+  capsules,
+  signals,
+  memoryAdvice,
+  driftEnabled,
+  failedCapsules,
+}) {
+  const baseBans = memoryAdvice?.bannedGeneIds instanceof Set
+    ? memoryAdvice.bannedGeneIds
+    : new Set();
   const preferredGeneId = memoryAdvice?.preferredGeneId || null;
 
+  const effectiveBans = banGenesFromFailedCapsules(
+    Array.isArray(failedCapsules) ? failedCapsules : [],
+    signals,
+    baseBans,
+  );
+
   const { selected, alternatives, driftIntensity } = selectGene(genes, signals, {
-    bannedGeneIds, preferredGeneId, driftEnabled,
+    bannedGeneIds: effectiveBans,
+    preferredGeneId,
+    driftEnabled,
   });
   const capsule = selectCapsule(capsules, signals);
 
   return { selectedGene: selected, capsuleCandidates: capsule ? [capsule] : [], driftIntensity };
+}
+
+// Failure-driven ban derivation. When a capsule fails, the genes it relied
+// on are candidates for banning -- but only when the failure context
+// overlaps the current signal set (so a Windows-only failure does not ban
+// the gene on Linux). Genes are added to the ban set after they accumulate
+// FAILED_CAPSULE_BAN_THRESHOLD overlapping failures.
+const FAILED_CAPSULE_BAN_THRESHOLD = 2;
+const FAILED_CAPSULE_OVERLAP_MIN = 0.6;
+
+export function banGenesFromFailedCapsules(failedCapsules, signals, existingBans) {
+  const bans = existingBans instanceof Set ? new Set(existingBans) : new Set();
+  if (!Array.isArray(failedCapsules) || failedCapsules.length === 0) return bans;
+
+  const counts = {};
+  for (const fc of failedCapsules) {
+    if (!fc || !fc.gene) continue;
+    if (computeSignalOverlap(signals, fc.trigger || []) < FAILED_CAPSULE_OVERLAP_MIN) continue;
+    const gid = String(fc.gene);
+    counts[gid] = (counts[gid] || 0) + 1;
+  }
+  for (const [gid, n] of Object.entries(counts)) {
+    if (n >= FAILED_CAPSULE_BAN_THRESHOLD) bans.add(gid);
+  }
+  return bans;
+}
+
+export function computeSignalOverlap(signalsA, signalsB) {
+  if (!Array.isArray(signalsA) || !Array.isArray(signalsB)) return 0;
+  if (signalsA.length === 0 || signalsB.length === 0) return 0;
+  const setB = new Set(signalsB.map(s => String(s).toLowerCase()));
+  let hits = 0;
+  for (const s of signalsA) {
+    if (setB.has(String(s).toLowerCase())) hits++;
+  }
+  return hits / Math.max(signalsA.length, 1);
 }
 
 function computeDriftIntensity({ driftEnabled, genePoolSize }) {

@@ -1,7 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { selectGene, selectCapsule, selectGeneAndCapsule } from '../src/selector.js';
+import {
+  selectGene,
+  selectCapsule,
+  selectGeneAndCapsule,
+  banGenesFromFailedCapsules,
+  computeSignalOverlap,
+} from '../src/selector.js';
 import { createGene } from '../src/gene.js';
 
 function makeGene(id, signals_match) {
@@ -158,4 +164,73 @@ test('selectGeneAndCapsule: bannedGeneIds via memoryAdvice excludes the gene', (
     memoryAdvice: { bannedGeneIds: new Set(['gene_a']) },
   });
   assert.equal(r.selectedGene.id, 'gene_b');
+});
+
+test('computeSignalOverlap: ratio of signalsA found in signalsB', () => {
+  assert.equal(computeSignalOverlap(['a', 'b'], ['a', 'b', 'c']), 1);
+  assert.equal(computeSignalOverlap(['a', 'b'], ['a', 'c']), 0.5);
+  assert.equal(computeSignalOverlap([], ['a']), 0);
+  assert.equal(computeSignalOverlap(['a'], []), 0);
+  assert.equal(computeSignalOverlap(['A'], ['a']), 1, 'case-insensitive');
+});
+
+test('banGenesFromFailedCapsules: bans gene after 2+ overlapping failures', () => {
+  const failed = [
+    { gene: 'gene_x', trigger: ['log_error', 'perf_bottleneck'] },
+    { gene: 'gene_x', trigger: ['log_error', 'perf_bottleneck'] },
+    { gene: 'gene_y', trigger: ['log_error'] },
+  ];
+  const bans = banGenesFromFailedCapsules(failed, ['log_error', 'perf_bottleneck'], new Set());
+  assert.ok(bans.has('gene_x'), 'gene_x had 2 high-overlap failures');
+  assert.ok(!bans.has('gene_y'), 'gene_y had only 1 failure');
+});
+
+test('banGenesFromFailedCapsules: skips low-overlap failures', () => {
+  // gene_x failed 3 times but on unrelated signals → not banned for current
+  // signals (Linux failure should not ban a gene on Windows).
+  const failed = [
+    { gene: 'gene_x', trigger: ['unrelated_a'] },
+    { gene: 'gene_x', trigger: ['unrelated_a'] },
+    { gene: 'gene_x', trigger: ['unrelated_b'] },
+  ];
+  const bans = banGenesFromFailedCapsules(failed, ['log_error'], new Set());
+  assert.equal(bans.size, 0);
+});
+
+test('banGenesFromFailedCapsules: preserves existing bans', () => {
+  const bans = banGenesFromFailedCapsules([], ['log_error'], new Set(['gene_old']));
+  assert.ok(bans.has('gene_old'));
+});
+
+test('selectGeneAndCapsule: failedCapsules bans recurring failure', () => {
+  const g1 = makeGene('gene_failer', ['log_error']);
+  const g2 = makeGene('gene_b', ['log_error']);
+  const failed = [
+    { gene: 'gene_failer', trigger: ['log_error'] },
+    { gene: 'gene_failer', trigger: ['log_error'] },
+  ];
+  const r = selectGeneAndCapsule({
+    genes: [g1, g2, ...makeFiller()],
+    capsules: [],
+    signals: ['log_error'],
+    failedCapsules: failed,
+  });
+  assert.equal(r.selectedGene.id, 'gene_b');
+});
+
+test('selectGeneAndCapsule: failedCapsules merges with memoryAdvice.bannedGeneIds', () => {
+  const g1 = makeGene('gene_a', ['log_error']);
+  const g2 = makeGene('gene_b', ['log_error']);
+  const g3 = makeGene('gene_c', ['log_error']);
+  const r = selectGeneAndCapsule({
+    genes: [g1, g2, g3, ...makeFiller()],
+    capsules: [],
+    signals: ['log_error'],
+    memoryAdvice: { bannedGeneIds: new Set(['gene_a']) },
+    failedCapsules: [
+      { gene: 'gene_b', trigger: ['log_error'] },
+      { gene: 'gene_b', trigger: ['log_error'] },
+    ],
+  });
+  assert.equal(r.selectedGene.id, 'gene_c');
 });
