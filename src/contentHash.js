@@ -1,6 +1,11 @@
 import { createHash } from 'node:crypto';
 
-export const SCHEMA_VERSION = '1.5.0';
+// Bump MINOR for additive fields; MAJOR for breaking changes. The current
+// value MUST stay in lockstep with `schemas/*.schema.json` and
+// `spec/gep-spec-v1.md` shipped in this package — that is exactly what
+// downstream implementations (evolver, gep-mcp-server, evox-Rust)
+// consume to detect protocol drift.
+export const SCHEMA_VERSION = '1.6.0';
 
 export function canonicalize(obj) {
   if (obj === null || obj === undefined) return 'null';

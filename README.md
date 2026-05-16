@@ -1,6 +1,30 @@
 # @evomap/gep-sdk
 
-JavaScript/TypeScript SDK for the Genome Evolution Protocol (GEP). Provides the core primitives for building GEP-compatible tools and agents.
+Single source of truth for the **Genome Evolution Protocol (GEP)**: JSON
+Schemas, the human-readable specification, and the protocol-level helpers
+that downstream implementations need to agree on `asset_id` values across
+runtimes.
+
+This package intentionally carries **no algorithm code**. Selection,
+signal extraction, gene scoring and the rest of the evolution behaviour
+live in concrete implementations (`@evomap/evolver`,
+`@evomap/gep-mcp-server`, the evox Rust crates). They consume the
+schemas and helpers shipped here so that bumping a field in
+`schemas/gene.schema.json` propagates to every implementation in
+lockstep — instead of drifting silently across four hand-maintained
+copies.
+
+## What's in the package
+
+| Path | Contents |
+|------|----------|
+| `schemas/gene.schema.json` | Gene asset schema (Draft-07 JSON Schema) |
+| `schemas/capsule.schema.json` | Capsule asset schema |
+| `schemas/evolution-event.schema.json` | EvolutionEvent asset schema |
+| `schemas/mutation.schema.json` | Mutation asset schema |
+| `schemas/task.schema.json` | Task asset schema (bounty work items) |
+| `spec/gep-spec-v1.md` | Full protocol specification |
+| `src/contentHash.js` | `SCHEMA_VERSION`, `canonicalize`, `computeAssetId`, `verifyAssetId` |
 
 ## Install
 
@@ -8,122 +32,65 @@ JavaScript/TypeScript SDK for the Genome Evolution Protocol (GEP). Provides the 
 npm install @evomap/gep-sdk
 ```
 
-## Modules
-
-| Module | Key Exports |
-|--------|-------------|
-| `contentHash` | `computeAssetId`, `verifyAssetId`, `canonicalize`, `SCHEMA_VERSION` |
-| `gene` | `createGene`, `validateGene`, `scoreGene`, `matchPatternToSignals` |
-| `capsule` | `createCapsule`, `validateCapsule` |
-| `mutation` | `buildMutation`, `validateMutation` |
-| `signals` | `extractSignals`, `hasOpportunitySignal`, `analyzeRecentHistory` |
-| `selector` | `selectGene`, `selectCapsule`, `selectGeneAndCapsule`, `banGenesFromFailedCapsules`, `computeSignalOverlap`, `computeDriftIntensity` |
-| `memoryGraph` | `MemoryGraph` class, `computeSignalKey` |
-| `assetStore` | `AssetStore` class (genes.json, capsules.json, events.jsonl) |
-| `portable` | `exportGepx`, `importGepx` |
-| `env` | `checkGitRepo`, `requireGitRepo` |
-
-## Usage
+## Use as a schema source
 
 ```javascript
-import {
-  AssetStore,
-  extractSignals,
-  selectGeneAndCapsule,
-  buildMutation,
-} from "@evomap/gep-sdk";
-
-const store = new AssetStore("/path/to/assets");
-const genes = store.loadGenes();
-const capsules = store.loadCapsules();
-
-const signals = extractSignals({
-  context: "Error: connection timeout after 30s",
-});
-
-const { selectedGene, capsuleCandidates } = selectGeneAndCapsule({
-  genes,
-  capsules,
-  signals,
-});
-
-const mutation = buildMutation({ signals, selectedGene });
+import geneSchema from '@evomap/gep-sdk/schemas/gene.schema.json' with { type: 'json' };
+import { SCHEMA_VERSION } from '@evomap/gep-sdk';
+// or: import { canonicalize, computeAssetId } from '@evomap/gep-sdk/content-hash';
 ```
 
-## Sub-path Imports
+Rust / non-JS consumers can resolve the same files through the package
+on disk (e.g. `node_modules/@evomap/gep-sdk/schemas/gene.schema.json`)
+and feed them into a code-generator such as `typify`.
+
+## Use the asset-id helpers
 
 ```javascript
-import { extractSignals } from "@evomap/gep-sdk/signals";
-import { AssetStore } from "@evomap/gep-sdk/asset-store";
-import { MemoryGraph } from "@evomap/gep-sdk/memory-graph";
+import { SCHEMA_VERSION, computeAssetId, verifyAssetId } from '@evomap/gep-sdk';
+
+const gene = {
+  type: 'Gene',
+  schema_version: SCHEMA_VERSION,
+  id: 'gene_repair_from_errors',
+  category: 'repair',
+  signals_match: ['log_error'],
+  strategy: ['Inspect logs', 'Apply fix', 'Re-run validation'],
+  constraints: { max_files: 20, forbidden_paths: ['.git', 'node_modules'] },
+  validation: ['npm test'],
+};
+gene.asset_id = computeAssetId(gene);
+
+verifyAssetId(gene); // true
 ```
 
-## Signal Detection
-
-Supports EN, ZH-CN, ZH-TW, and JA for opportunity signals (feature requests, improvement suggestions). Error signals are detected from structured log patterns.
-
-| Signal | Trigger |
-|--------|---------|
-| `log_error` | `[error]`, `error:`, `exception:` patterns |
-| `user_feature_request:<snippet>` | "add a feature", "implement", multi-language |
-| `user_improvement_suggestion:<snippet>` | "improve", "refactor", multi-language |
-| `perf_bottleneck` | "slow", "timeout", "latency" |
-| `capability_gap` | "not supported", "missing feature" |
-| `stable_success_plateau` | No signals detected (default) |
+`canonicalize` produces deterministic JSON (sorted keys at every level,
+non-finite numbers and `undefined` coerced to `null`); `computeAssetId`
+applies SHA-256 to the canonicalized form and prefixes `sha256:`.
 
 ## Stability
 
-Public APIs follow semver. Each module has a stability marker:
+| Surface | Stability |
+|---------|-----------|
+| Schemas (`schemas/*.schema.json`) | `@stable` — additive minor bumps; breaking changes require a major version |
+| Specification (`spec/gep-spec-v1.md`) | `@stable` |
+| `SCHEMA_VERSION`, `canonicalize`, `computeAssetId`, `verifyAssetId` | `@stable` |
 
-| Marker | Meaning |
-|--------|---------|
-| `@stable` | Semver-protected. Breaking change requires a major bump. |
-| `@experimental` | May change without warning between minor versions. |
-| `@internal` | No stability promise; do not depend on this externally. |
+Anything not listed above is not part of this package.
 
-Current state:
+## Migrating from 1.1.x
 
-| Module | Stability |
-|--------|-----------|
-| `contentHash` (asset id, canonical hash) | `@stable` |
-| `gene` (`createGene`, `validateGene`, `scoreGene`, `matchPatternToSignals`) | `@stable` |
-| `capsule` (`createCapsule`, `validateCapsule`) | `@stable` |
-| `mutation` (`buildMutation`, `validateMutation`) | `@stable` |
-| `selector` (`selectGene`, `selectCapsule`, `selectGeneAndCapsule`, `computeDriftIntensity`) | `@stable` |
-| `selector` (`banGenesFromFailedCapsules`, `computeSignalOverlap`) | `@experimental` (added in 1.1.0; thresholds may evolve) |
-| `signals` (`extractSignals`, `hasOpportunitySignal`, `analyzeRecentHistory`) | `@stable` |
-| `signals` `analyzeRecentHistory` extra fields (`consecutiveFailureCount`, `recentFailureRatio`, `signalFreq`) | `@experimental` (added in 1.1.0) |
-| `memoryGraph`, `assetStore`, `portable`, `env` | `@stable` |
+`@evomap/gep-sdk@1.1.0` exposed selection / signal-extraction /
+memory-graph / asset-store helpers (`selectGene`, `extractSignals`,
+`MemoryGraph`, `AssetStore`, …). Those modules have been removed in
+**1.2.0** because they conflated a protocol package with implementation
+behaviour. If you depended on any of them:
 
-## What's new in 1.1.0
-
-Three v1.0.x selector bugs fixed and several protocol-level extensions:
-
-- **Hard ban suppression**: `bannedGeneIds` is now respected in all modes
-  including drift. v1.0.x bypassed it on small pools, producing a
-  self-defeating loop where failed genes were re-selected.
-- **Soft memory preference**: `preferredGeneId` no longer overrides a
-  strictly higher-scoring gene; it applies a 1.5x score boost. Prevents
-  the popular-gene-spreads-into-unfit-contexts feedback loop.
-- **Drift-gated jitter**: random selection inside `selectGene` now
-  requires `useDrift = true`. v1.0.x triggered ~14% jitter on small
-  pools with `driftEnabled: false`.
-- **Adaptive maturity decay**: `computeDriftIntensity` accepts
-  `effectivePopulationSize` and `memoryEvidence`. The exploration
-  offset starts at 0.3 and decays to 0.02 once the memory graph has
-  accumulated enough evidence.
-- **`plateauOverride`**: `selectGene` accepts `plateauOverride =
-  { active, severity }` to force exploration when exploitation has
-  stalled.
-- **`failedCapsules`**: `selectGeneAndCapsule` accepts a
-  `failedCapsules` array; genes that fail twice on overlapping signal
-  contexts are auto-banned via `banGenesFromFailedCapsules`.
-- **History fields**: `analyzeRecentHistory` returns
-  `consecutiveFailureCount`, `recentFailureRatio`, and a normalized
-  `signalFreq` map.
-
-All additions are backward-compatible: existing callers that don't pass
-the new options see no behavior change beyond the three bug fixes.
+- **Use `@evomap/evolver`** for a complete self-evolution engine.
+- **Use `@evomap/gep-mcp-server`** to expose evolution as MCP tools.
+- For ad-hoc projects that *really* need the JS algorithm code, pin
+  `@evomap/gep-sdk@1.1.0`. That release line will not receive new
+  features, only critical fixes.
 
 ## Requirements
 
@@ -132,9 +99,9 @@ the new options see no behavior change beyond the three bug fixes.
 
 ## Related
 
-- [@evomap/gep-mcp-server](https://github.com/EvoMap/gep-mcp-server) -- MCP Server for GEP
-- [@evomap/evolver](https://github.com/EvoMap/evolver) -- Full self-evolution engine
-- [EvoMap](https://evomap.ai) -- Agent evolution network
+- [@evomap/evolver](https://github.com/EvoMap/evolver) — self-evolution engine
+- [@evomap/gep-mcp-server](https://github.com/EvoMap/gep-mcp-server) — MCP server exposing GEP tools
+- [EvoMap](https://evomap.ai) — agent evolution network
 
 ## License
 
