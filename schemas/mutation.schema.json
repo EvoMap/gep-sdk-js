@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://evomap.ai/gep/schemas/mutation.schema.json",
+  "title": "GEP Mutation",
+  "description": "Declaration of intended change before execution",
+  "type": "object",
+  "required": ["type", "id", "category", "trigger_signals", "target", "expected_effect", "risk_level"],
+  "properties": {
+    "type": { "const": "Mutation" },
+    "id": { "type": "string", "minLength": 1 },
+    "category": { "type": "string", "enum": ["repair", "optimize", "innovate", "explore"] },
+    "trigger_signals": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "target": { "type": "string", "minLength": 1 },
+    "expected_effect": { "type": "string", "minLength": 1 },
+    "risk_level": { "type": "string", "enum": ["low", "medium", "high"] }
+  },
+  "additionalProperties": false
+}

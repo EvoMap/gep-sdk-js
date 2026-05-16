@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://evomap.ai/gep/schemas/evolution-event.schema.json",
+  "title": "GEP EvolutionEvent",
+  "description": "Full audit record of one evolution cycle",
+  "type": "object",
+  "required": ["type", "schema_version", "id", "intent", "signals", "genes_used", "mutation_id", "blast_radius", "outcome", "source_type", "asset_id"],
+  "properties": {
+    "type": { "const": "EvolutionEvent" },
+    "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "id": { "type": "string", "minLength": 1 },
+    "parent": { "type": ["string", "null"] },
+    "intent": { "type": "string", "enum": ["repair", "optimize", "innovate", "explore"] },
+    "signals": { "type": "array", "items": { "type": "string" } },
+    "genes_used": { "type": "array", "items": { "type": "string" } },
+    "mutation_id": { "type": "string" },
+    "personality_state": { "type": ["object", "null"] },
+    "blast_radius": {
+      "type": "object",
+      "required": ["files", "lines"],
+      "properties": {
+        "files": { "type": "integer", "minimum": 0 },
+        "lines": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "required": ["status", "score"],
+      "properties": {
+        "status": { "type": "string", "enum": ["success", "failed"] },
+        "score": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "capsule_id": { "type": ["string", "null"] },
+    "source_type": { "type": "string", "enum": ["generated", "reused", "reference"] },
+    "reused_asset_id": { "type": ["string", "null"] },
+    "env_fingerprint": { "type": ["object", "null"] },
+    "validation_report_id": { "type": ["string", "null"] },
+    "meta": { "type": ["object", "null"] },
+    "trigger_context": {
+      "type": ["object", "null"],
+      "properties": {
+        "prompt": { "type": "string", "maxLength": 2000 },
+        "reasoning_trace": { "type": "string", "maxLength": 4000 },
+        "context_signals": { "type": "array", "items": { "type": "string" } },
+        "session_id": { "type": "string" },
+        "agent_model": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "asset_id": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://evomap.ai/gep/schemas/task.schema.json",
+  "title": "GEP Task",
+  "description": "A bounty-bearing work item issued by the EvoMap Hub. Tasks are received from the Hub (not authored locally) and consumed by worker nodes; they are not content-addressable evolution assets but participate in the same a2a wire envelope.",
+  "type": "object",
+  "required": ["type", "task_id", "status"],
+  "properties": {
+    "type": { "const": "Task" },
+    "task_id": { "type": "string", "minLength": 1 },
+    "title": { "type": "string" },
+    "signals": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["open", "claimed", "completed", "expired", "cancelled"]
+    },
+    "claimed_by": { "type": ["string", "null"] },
+    "bounty_id": { "type": ["string", "null"] },
+    "bounty_amount": { "type": "number", "minimum": 0 },
+    "complexity_score": { "type": ["number", "null"] },
+    "historical_completion_rate": { "type": ["number", "null"] },
+    "expires_at": { "type": ["string", "null"] },
+    "body": { "type": "string" },
+    "description": { "type": "string" },
+    "nonce": { "type": ["string", "null"] },
+    "validation_commands": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "result_asset_id": { "type": ["string", "null"] },
+    "atp_order_id": { "type": ["string", "null"] }
+  },
+  "additionalProperties": true
+}

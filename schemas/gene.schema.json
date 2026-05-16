@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://evomap.ai/gep/schemas/gene.schema.json",
+  "title": "GEP Gene",
+  "description": "A reusable evolution strategy in the Genome Evolution Protocol",
+  "type": "object",
+  "required": ["type", "schema_version", "id", "category", "signals_match", "strategy", "constraints", "validation", "asset_id"],
+  "properties": {
+    "type": { "const": "Gene" },
+    "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "id": { "type": "string", "minLength": 1 },
+    "category": { "type": "string", "enum": ["repair", "optimize", "innovate", "explore"] },
+    "signals_match": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "preconditions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "strategy": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "constraints": {
+      "type": "object",
+      "required": ["max_files", "forbidden_paths"],
+      "properties": {
+        "max_files": { "type": "integer", "minimum": 1 },
+        "forbidden_paths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        }
+      }
+    },
+    "validation": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "summary": { "type": "string" },
+    "epigenetic_marks": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "learning_history": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "properties": {
+          "at": { "type": "string" },
+          "outcome": { "type": "string" },
+          "mode": { "type": "string" },
+          "reason_class": { "type": "string" },
+          "retryable": { "type": "boolean" },
+          "learning_signals": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "anti_patterns": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "properties": {
+          "at": { "type": "string" },
+          "mode": { "type": "string" },
+          "reason_class": { "type": "string" },
+          "learning_signals": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "asset_id": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+  },
+  "additionalProperties": false
+}
