@@ -2,11 +2,12 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://evomap.ai/gep/schemas/mutation.schema.json",
   "title": "GEP Mutation",
-  "description": "Declaration of intended change before execution",
+  "description": "Declaration of intended change before execution. Unlike the other content-addressable asset types, the reference engine treats Mutation as a transient in-memory object and typically does not stamp `schema_version` / `asset_id`. Both fields are accepted (optional) so an implementation that DOES want to make Mutations content-addressable can do so without tripping `additionalProperties: false`.",
   "type": "object",
   "required": ["type", "id", "category", "trigger_signals", "target", "expected_effect", "risk_level"],
   "properties": {
     "type": { "const": "Mutation" },
+    "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
     "id": { "type": "string", "minLength": 1 },
     "category": { "type": "string", "enum": ["repair", "optimize", "innovate", "explore"] },
     "trigger_signals": {
@@ -15,7 +16,8 @@
     },
     "target": { "type": "string", "minLength": 1 },
     "expected_effect": { "type": "string", "minLength": 1 },
-    "risk_level": { "type": "string", "enum": ["low", "medium", "high"] }
+    "risk_level": { "type": "string", "enum": ["low", "medium", "high"] },
+    "asset_id": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
   },
   "additionalProperties": false
 }
