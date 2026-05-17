@@ -163,15 +163,26 @@ An EvolutionEvent is the full audit record of one evolution cycle, regardless of
 
 A Mutation describes the intended change before execution. It is a declaration of intent with risk assessment.
 
+Unlike the other six asset types in §2, the reference engine treats
+Mutation as a **transient in-memory object**: it lives only long enough
+to drive a single execute/evaluate cycle and is not persisted as a
+content-addressable artifact in `events.jsonl` (the surrounding
+`EvolutionEvent.mutation_id` records the reference). Implementations
+that *do* want to make Mutations content-addressable MAY stamp the
+common envelope fields (`schema_version`, `asset_id`); both are
+optional in this schema rather than required.
+
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `type` | string | yes | Always `"Mutation"` |
+| `schema_version` | string | no | Protocol schema version (only present when an implementation chooses to make Mutations content-addressable) |
 | `id` | string | yes | e.g. `mut_1708123456789` |
 | `category` | enum | yes | `"repair"`, `"optimize"`, `"innovate"`, or `"explore"` |
 | `trigger_signals` | string[] | yes | Signals that motivated this mutation |
 | `target` | string | yes | Target of mutation, e.g. `"gene:gene_id"` or `"behavior:protocol"` |
 | `expected_effect` | string | yes | Human-readable expected outcome |
 | `risk_level` | enum | yes | `"low"`, `"medium"`, or `"high"` |
+| `asset_id` | string | no | Content-addressable hash (only present when an implementation chooses to make Mutations content-addressable) |
 
 **Risk level determination:**
 - `low`: Default for repair and optimize
