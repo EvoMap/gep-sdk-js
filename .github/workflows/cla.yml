@@ -1,0 +1,46 @@
+name: "CLA Assistant"
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened, closed, synchronize]
+
+permissions:
+  actions: write
+  contents: read
+  pull-requests: write
+  statuses: write
+
+jobs:
+  cla-check:
+    runs-on: ubuntu-latest
+    if: |
+      (github.event.comment.body == 'recheck' ||
+       github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') ||
+      github.event_name == 'pull_request_target'
+    steps:
+      - name: "CLA Assistant"
+        # Pin to immutable SHA (v2.6.1) — defends the workflow's
+        # PR-write-token scope against upstream tag retargeting.
+        uses: contributor-assistant/github-action@ca4a40a7d1004f18d9960b404b97e5f30a505a08 # v2.6.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.CLA_PAT }}
+        with:
+          path-to-signatures: 'signatures/cla.json'
+          path-to-document: 'https://github.com/EvoMap/gep-sdk-js/blob/master/CLA/ICLA.md'
+          branch: 'cla-signatures'
+          allowlist: dependabot[bot],renovate[bot]
+          remote-organization-name: EvoMap
+          remote-repository-name: gep-sdk-cla-signatures
+          custom-notsigned-prcomment: |
+            Thanks for your contribution! Before we can merge your pull request,
+            you (and any other contributors on this PR) need to sign the EvoMap
+            Individual Contributor License Agreement (ICLA).
+
+            **The CLA text:** [CLA/ICLA.md](https://github.com/EvoMap/gep-sdk-js/blob/master/CLA/ICLA.md)
+
+            To sign, please post the following comment on this PR:
+          custom-pr-sign-comment: 'I have read the CLA Document and I hereby sign the CLA'
+          custom-allsigned-prcomment: '**CLA Assistant Lite bot** ✅ All Contributors have signed the CLA.'

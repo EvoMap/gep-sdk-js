@@ -103,6 +103,38 @@ behaviour. If you depended on any of them:
 - [@evomap/gep-mcp-server](https://github.com/EvoMap/gep-mcp-server) — MCP server exposing GEP tools
 - [EvoMap](https://evomap.ai) — agent evolution network
 
-## License
+## Contributing
 
-GPL-3.0-or-later. See [LICENSE](./LICENSE).
+Pull requests are welcome. All contributors must sign our
+[Individual CLA](./CLA/ICLA.md) (or [Corporate CLA](./CLA/CCLA.md))
+before merge — see [CONTRIBUTING.md](./CONTRIBUTING.md) for the
+workflow. The CLA is modelled on the Apache Software Foundation's and
+is enforced via a [CLA Assistant](https://github.com/cla-assistant/github-action)
+GitHub Action.
+
+## Licence
+
+- **Source code** (`src/`, `schemas/`, repository tooling) — licensed
+  under the [Apache License, Version 2.0](./LICENSE). See [NOTICE](./NOTICE)
+  for attribution requirements.
+- **Specification** (`spec/gep-spec-v1.md` and any other documents
+  under `spec/` or `docs/`) — licensed under
+  [Creative Commons Attribution 4.0 International (CC-BY-4.0)](./spec/LICENSE-CC-BY-4.0.txt).
+  Implementations may freely re-distribute and adapt the spec text
+  with attribution to EvoMap.
+
+The licences cover code and documentation only. **"EvoMap", "GEP",
+and "Genome Evolution Protocol" are trademarks of EvoMap.** Apache 2.0
+and CC-BY-4.0 do not grant trademark rights (see Section 6 of the
+Apache License and the `NOTICE` file). Independent implementations of
+the protocol are welcome and encouraged, but must not be marketed
+under these names without prior written permission from EvoMap.
+Contact `licensing@evomap.ai` to discuss attribution or co-marketing.
+
+### Pre-1.3 history
+
+`@evomap/gep-sdk` 1.0.x – 1.2.x was published under GPL-3.0-or-later.
+Versions 1.3.0 and later are Apache-2.0. If you have an existing
+deployment on 1.2.x and need to remain on the GPL line, those releases
+remain available on npm; new fixes will be backported only on a
+best-effort basis.
