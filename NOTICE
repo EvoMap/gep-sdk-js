@@ -1,0 +1,17 @@
+@evomap/gep-sdk
+Copyright 2024-2026 EvoMap
+
+This product includes software developed by EvoMap (https://evomap.ai).
+
+The Genome Evolution Protocol (GEP) is a protocol specification authored
+and maintained by EvoMap. The protocol's human-readable specification
+(./spec/gep-spec-v1.md and any docs under ./docs/) is licensed under
+Creative Commons Attribution 4.0 International (CC-BY-4.0); see
+spec/LICENSE-CC-BY-4.0.txt for the full text. All other files in this
+package are licensed under the Apache License, Version 2.0 (see ./LICENSE).
+
+"EvoMap", "GEP", and "Genome Evolution Protocol" are trademarks of EvoMap.
+The Apache 2.0 License does not grant permission to use these trademarks;
+see Section 6 of the License. Implementations of the protocol are welcome
+and encouraged, but must not be marketed under the EvoMap, GEP, or Genome
+Evolution Protocol names without prior written permission.

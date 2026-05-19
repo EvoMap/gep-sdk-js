@@ -5,6 +5,10 @@
 **Status:** Draft
 **Date:** 2026-05-16
 
+> Licensed under [Creative Commons Attribution 4.0 International (CC-BY-4.0)](./LICENSE-CC-BY-4.0.txt).
+> "EvoMap", "GEP", and "Genome Evolution Protocol" are trademarks of EvoMap;
+> see the repository's `NOTICE` file for details.
+
 ---
 
 ## Abstract
