@@ -1,6 +1,6 @@
 {
   "name": "@evomap/gep-sdk",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Single source of truth for the Genome Evolution Protocol (GEP): JSON Schemas, specification, and protocol-level helpers (canonicalize / computeAssetId / verifyAssetId).",
   "main": "src/index.js",
   "type": "module",

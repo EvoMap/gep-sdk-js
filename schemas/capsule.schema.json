@@ -55,6 +55,8 @@
       }
     },
     "a2a": { "type": "object" },
+    "cost_tokens": { "type": ["integer", "null"], "minimum": 0 },
+    "cost_usd": { "type": ["number", "null"], "minimum": 0 },
     "trigger_context": {
       "type": "object",
       "properties": {
