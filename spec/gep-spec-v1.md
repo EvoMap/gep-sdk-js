@@ -1,9 +1,9 @@
 # GEP: Genome Evolution Protocol
 
 **Version:** 1.0.0
-**Schema Version:** 1.6.0
+**Schema Version:** 1.7.0
 **Status:** Draft
-**Date:** 2026-05-16
+**Date:** 2026-05-20
 
 > Licensed under [Creative Commons Attribution 4.0 International (CC-BY-4.0)](./LICENSE-CC-BY-4.0.txt).
 > "EvoMap", "GEP", and "Genome Evolution Protocol" are trademarks of EvoMap;
@@ -127,6 +127,8 @@ A Capsule is the record of a single successful evolution. It captures what trigg
 | `strategy` | string[] | no | Snapshot of the gene's strategy steps as actually executed |
 | `execution_trace` | object[] | no | Per-stage trace; each entry includes a `stage` of `"build"`, `"validate"`, or `"canary"` |
 | `a2a` | object | no | Agent-to-agent exchange metadata |
+| `cost_tokens` | integer | no | Total tokens spent producing this evolution (input + output + cache); non-negative |
+| `cost_usd` | float | no | Estimated USD spend producing this evolution; non-negative |
 | `trigger_context` | object | no | Optional `{prompt, reasoning_trace, context_signals[], session_id, agent_model}` — what the user/agent was doing when this evolution fired |
 | `asset_id` | string | yes | Content-addressable hash |
 
@@ -690,6 +692,26 @@ Enhanced inference adjusts the base score by:
 ---
 
 ## Appendix C: Schema Version History
+
+### 1.7.0 (2026-05-20)
+
+Additive Capsule cost-attribution fields. All changes backward-compatible;
+existing 1.6.0 assets validate unchanged and their `asset_id` is byte-stable
+under the canonicalization rules of §5 because absent properties never enter
+the canonical form.
+
+**Capsule fields added (both optional):**
+- `cost_tokens` — non-negative integer; total tokens spent producing this
+  evolution (input + output + cache where the implementation can attribute).
+- `cost_usd` — non-negative float; estimated USD cost. Useful when the
+  capsule was produced by a routed mixture of model tiers and a flat token
+  count would understate spend.
+
+These fields let recall implementations apply budget filters (e.g. "return
+the highest-score capsule under N tokens") without needing a separate
+cost-tracking index. Capsules persisted before this revision carry no cost
+fields; recall implementations MUST treat absent values as unknown and
+SHOULD NOT exclude them from results (conservative carry-forward).
 
 ### 1.6.0 (2026-05-16)
 
