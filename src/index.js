@@ -27,3 +27,10 @@
 // here; doing so would re-introduce the drift this package exists to
 // eliminate.
 export { SCHEMA_VERSION, canonicalize, computeAssetId, verifyAssetId } from './contentHash.js';
+export {
+  GEP_GENE_CATEGORIES,
+  GEP_MUTATION_CATEGORIES,
+  GEP_OUTCOME_STATUSES,
+  GEP_SOURCE_TYPES,
+  GEP_RISK_LEVELS,
+} from './protocolConstants.js';

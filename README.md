@@ -25,6 +25,7 @@ copies.
 | `schemas/task.schema.json` | Task asset schema (bounty work items) |
 | `spec/gep-spec-v1.md` | Full protocol specification |
 | `src/contentHash.js` | `SCHEMA_VERSION`, `canonicalize`, `computeAssetId`, `verifyAssetId` |
+| `src/protocolConstants.js` | Shared protocol enums such as `GEP_GENE_CATEGORIES` and `GEP_OUTCOME_STATUSES` |
 
 ## Install
 
@@ -36,7 +37,7 @@ npm install @evomap/gep-sdk
 
 ```javascript
 import geneSchema from '@evomap/gep-sdk/schemas/gene.schema.json' with { type: 'json' };
-import { SCHEMA_VERSION } from '@evomap/gep-sdk';
+import { SCHEMA_VERSION, GEP_GENE_CATEGORIES } from '@evomap/gep-sdk';
 // or: import { canonicalize, computeAssetId } from '@evomap/gep-sdk/content-hash';
 ```
 
@@ -75,6 +76,7 @@ applies SHA-256 to the canonicalized form and prefixes `sha256:`.
 | Schemas (`schemas/*.schema.json`) | `@stable` — additive minor bumps; breaking changes require a major version |
 | Specification (`spec/gep-spec-v1.md`) | `@stable` |
 | `SCHEMA_VERSION`, `canonicalize`, `computeAssetId`, `verifyAssetId` | `@stable` |
+| Protocol constants (`GEP_*`) | `@stable` — kept in lockstep with the shipped schemas |
 
 Anything not listed above is not part of this package.
 
