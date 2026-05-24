@@ -100,11 +100,15 @@ test('protocolConstants: GEP_CAPSULE_COST_TIERS matches schema enum', () => {
   assert.deepEqual([...GEP_CAPSULE_COST_TIERS], schemaVals);
 });
 
-test('schema: pack_of declared optional, nullable, array of non-empty strings', () => {
+test('schema: pack_of declared optional, nullable, array of asset_id strings', () => {
+  // Items must match the same `^sha256:...` pattern as `asset_id` itself —
+  // otherwise downstream Hub recall (Stage 4) would silently receive invalid
+  // pointers like `pack_of: ["garbage"]`.
   const p = SCHEMA.properties.pack_of;
   assert.deepEqual(p.type, ['array', 'null']);
   assert.equal(p.items.type, 'string');
-  assert.equal(p.items.minLength, 1);
+  assert.equal(p.items.pattern, '^sha256:[a-f0-9]{64}$');
+  assert.equal(p.items.pattern, SCHEMA.properties.asset_id.pattern);
   assert.ok(!SCHEMA.required.includes('pack_of'));
 });
 

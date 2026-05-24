@@ -83,7 +83,7 @@
     },
     "pack_of": {
       "type": ["array", "null"],
-      "items": { "type": "string", "minLength": 1 }
+      "items": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
     },
     "author": {
       "type": ["object", "null"],
