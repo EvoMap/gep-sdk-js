@@ -34,10 +34,30 @@ export const GEP_SOURCE_TYPES = Object.freeze([
   'generated',
   'reused',
   'reference',
+  'user_authored',
 ]);
 
 export const GEP_RISK_LEVELS = Object.freeze([
   'low',
   'medium',
   'high',
+]);
+
+// Capsule visibility controls who can recall a published capsule from the
+// EvoMap Hub. `private` = author-only; `unlisted` = recallable by direct
+// asset_id but not surfaced in browse/search; `public` = listed.
+export const GEP_CAPSULE_VISIBILITIES = Object.freeze([
+  'private',
+  'unlisted',
+  'public',
+]);
+
+// Coarse cost-tier label used by routers (e.g. evox model_router) to
+// prefer cheap capsules first when a budget is set. Distinct from the
+// numeric `cost_tokens` / `cost_usd` fields, which are point-in-time
+// measurements; `cost_tier` is a stable selector.
+export const GEP_CAPSULE_COST_TIERS = Object.freeze([
+  'cheap',
+  'standard',
+  'premium',
 ]);

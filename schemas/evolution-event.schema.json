@@ -32,7 +32,7 @@
       }
     },
     "capsule_id": { "type": ["string", "null"] },
-    "source_type": { "type": "string", "enum": ["generated", "reused", "reference"] },
+    "source_type": { "type": "string", "enum": ["generated", "reused", "reference", "user_authored"] },
     "reused_asset_id": { "type": ["string", "null"] },
     "env_fingerprint": { "type": ["object", "null"] },
     "validation_report_id": { "type": ["string", "null"] },

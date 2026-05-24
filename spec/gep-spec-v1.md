@@ -1,9 +1,9 @@
 # GEP: Genome Evolution Protocol
 
 **Version:** 1.0.0
-**Schema Version:** 1.7.0
+**Schema Version:** 1.8.0
 **Status:** Draft
-**Date:** 2026-05-20
+**Date:** 2026-05-24
 
 > Licensed under [Creative Commons Attribution 4.0 International (CC-BY-4.0)](./LICENSE-CC-BY-4.0.txt).
 > "EvoMap", "GEP", and "Genome Evolution Protocol" are trademarks of EvoMap;
@@ -692,6 +692,58 @@ Enhanced inference adjusts the base score by:
 ---
 
 ## Appendix C: Schema Version History
+
+### 1.8.0 (2026-05-24)
+
+Additive Capsule fields supporting **user-authored capsules** — i.e.
+capsules a human operator hand-crafts (or composes from existing genes)
+in their local agent and wants to share to the EvoMap Hub. All changes
+are backward-compatible; existing 1.7.0 assets validate unchanged and
+their `asset_id` is byte-stable under §5 because absent properties never
+enter the canonical form.
+
+**Capsule fields added (all optional):**
+
+- `visibility` — string enum `private | unlisted | public`. Selects who
+  can recall a published capsule from the Hub. `private` = author-only;
+  `unlisted` = recallable by direct `asset_id` only; `public` = listed
+  in browse/search. Absent ⇒ implementation default (typically
+  `private` for new user-authored content).
+- `scope` — array of strings. Free-form tags the author attaches to
+  scope the capsule's intended use (e.g. `["rust", "tokio", "debug"]`).
+  Distinct from `trigger` (which encodes machine-detected signals);
+  `scope` is operator intent and recall implementations MAY use it as
+  a soft filter.
+- `cost_tier` — string enum `cheap | standard | premium`. Stable
+  routing label that lets cost-aware selectors prefer cheaper capsules
+  first, even when point-in-time `cost_tokens` / `cost_usd` are absent.
+- `pack_of` — array of capsule `asset_id`s. Indicates this capsule is a
+  composition (a "pack") of the listed capsules; recall implementations
+  MAY surface the constituents alongside the pack.
+- `author` — object `{ handle, evox_install_id }`. Identifies the human
+  operator who authored the capsule. `handle` is a free-form display
+  name; `evox_install_id` is the local install identifier and lets a
+  user reconcile their own published artefacts across nodes.
+
+**`source_type` enum extended (Capsule + EvolutionEvent):**
+
+- New value `"user_authored"` joins `generated | reused | reference`.
+  Implementations producing a capsule from an interactive operator
+  command (e.g. evox's `/capsule save`) SHOULD set this; downstream
+  recall MAY use it to favour or filter authored content. The same
+  enum extension applies to `EvolutionEvent.source_type` so that
+  audit events emitted alongside a user-authored capsule can carry
+  the matching label.
+
+**Protocol constants (`@evomap/gep-sdk` JS exports):**
+
+- `GEP_SOURCE_TYPES` includes `'user_authored'`.
+- New: `GEP_CAPSULE_VISIBILITIES` = `['private', 'unlisted', 'public']`.
+- New: `GEP_CAPSULE_COST_TIERS` = `['cheap', 'standard', 'premium']`.
+
+These let validators on the Hub side share enums with client
+implementations (evolver, gep-mcp-server, evox-Rust) without
+re-declaring them per consumer.
 
 ### 1.7.0 (2026-05-20)
 

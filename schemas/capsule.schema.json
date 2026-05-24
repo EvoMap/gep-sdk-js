@@ -37,7 +37,7 @@
     "success_reason": { "type": ["string", "null"] },
     "gene_library_version": { "type": ["string", "null"] },
     "env_fingerprint": { "type": ["object", "null"] },
-    "source_type": { "type": ["string", "null"], "enum": ["generated", "reused", "reference", null] },
+    "source_type": { "type": ["string", "null"], "enum": ["generated", "reused", "reference", "user_authored", null] },
     "reused_asset_id": { "type": ["string", "null"] },
     "content": { "type": ["object", "null"] },
     "diff": { "type": ["object", "null"] },
@@ -68,7 +68,32 @@
       },
       "additionalProperties": false
     },
-    "asset_id": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+    "asset_id": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "visibility": {
+      "type": ["string", "null"],
+      "enum": ["private", "unlisted", "public", null]
+    },
+    "scope": {
+      "type": ["array", "null"],
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "cost_tier": {
+      "type": ["string", "null"],
+      "enum": ["cheap", "standard", "premium", null]
+    },
+    "pack_of": {
+      "type": ["array", "null"],
+      "items": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+    },
+    "author": {
+      "type": ["object", "null"],
+      "required": ["handle", "evox_install_id"],
+      "properties": {
+        "handle": { "type": "string", "minLength": 1 },
+        "evox_install_id": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    }
   },
   "additionalProperties": false
 }
