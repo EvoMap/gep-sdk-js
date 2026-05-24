@@ -87,6 +87,7 @@
     },
     "author": {
       "type": ["object", "null"],
+      "required": ["handle", "evox_install_id"],
       "properties": {
         "handle": { "type": "string", "minLength": 1 },
         "evox_install_id": { "type": "string", "minLength": 1 }

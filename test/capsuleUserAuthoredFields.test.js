@@ -119,6 +119,15 @@ test('schema: author declared optional, nullable, sealed object', () => {
   assert.ok(!SCHEMA.required.includes('author'));
 });
 
+test('schema: author sub-object requires both handle and evox_install_id', () => {
+  // Without `required`, an empty `{}` would satisfy the author shape and
+  // produce useless author records. The whole purpose of `author` is
+  // identification (handle) and cross-node reconciliation (evox_install_id),
+  // so neither sub-field is meaningfully optional.
+  const p = SCHEMA.properties.author;
+  assert.deepEqual(p.required, ['handle', 'evox_install_id']);
+});
+
 test('schema: additionalProperties remains false (no silent extra fields)', () => {
   assert.equal(SCHEMA.additionalProperties, false);
 });
