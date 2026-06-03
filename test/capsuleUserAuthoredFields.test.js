@@ -45,8 +45,11 @@ function baseCapsule(overrides = {}) {
   };
 }
 
-test('schema_version: bumped to 1.8.0 in lockstep with new fields', () => {
-  assert.equal(SCHEMA_VERSION, '1.8.0');
+test('schema_version: at least 1.8.0 (capsule user-authored fields landed here)', () => {
+  // The capsule user-authored fields landed in 1.8.0; later additive bumps
+  // (e.g. 1.9.0 recipe schema) must not regress below it.
+  const [maj, min] = SCHEMA_VERSION.split('.').map(Number);
+  assert.ok(maj > 1 || (maj === 1 && min >= 8), `expected >= 1.8.0, got ${SCHEMA_VERSION}`);
 });
 
 test('schema: source_type enum extended with user_authored', () => {

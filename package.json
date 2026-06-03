@@ -12,6 +12,7 @@
     "./schemas/evolution-event.schema.json": "./schemas/evolution-event.schema.json",
     "./schemas/mutation.schema.json": "./schemas/mutation.schema.json",
     "./schemas/task.schema.json": "./schemas/task.schema.json",
+    "./schemas/recipe.schema.json": "./schemas/recipe.schema.json",
     "./spec/gep-spec-v1.md": "./spec/gep-spec-v1.md"
   },
   "keywords": ["gep", "protocol", "schema", "ai-agent", "evolution", "self-evolution", "mcp", "evomap"],
