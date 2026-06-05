@@ -1,7 +1,7 @@
 # GEP: Genome Evolution Protocol
 
 **Version:** 1.0.0
-**Schema Version:** 1.8.0
+**Schema Version:** 1.9.0
 **Status:** Draft
 **Date:** 2026-05-24
 
