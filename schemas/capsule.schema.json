@@ -4,93 +4,363 @@
   "title": "GEP Capsule",
   "description": "A record of a single evolution in the Genome Evolution Protocol",
   "type": "object",
-  "required": ["type", "schema_version", "id", "trigger", "gene", "summary", "confidence", "blast_radius", "outcome", "asset_id"],
+  "required": [
+    "type",
+    "schema_version",
+    "id",
+    "trigger",
+    "gene",
+    "summary",
+    "confidence",
+    "blast_radius",
+    "outcome",
+    "asset_id"
+  ],
   "properties": {
-    "type": { "const": "Capsule" },
-    "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
-    "id": { "type": "string", "minLength": 1 },
+    "type": {
+      "const": "Capsule"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
     "trigger": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "minItems": 1
     },
-    "gene": { "type": "string", "minLength": 1 },
-    "summary": { "type": "string", "minLength": 1 },
-    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "gene": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
     "blast_radius": {
       "type": "object",
-      "required": ["files", "lines"],
+      "required": [
+        "files",
+        "lines"
+      ],
       "properties": {
-        "files": { "type": "integer", "minimum": 0 },
-        "lines": { "type": "integer", "minimum": 0 }
+        "files": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lines": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "outcome": {
       "type": "object",
-      "required": ["status", "score"],
+      "required": [
+        "status",
+        "score"
+      ],
       "properties": {
-        "status": { "type": "string", "enum": ["success", "failed"] },
-        "score": { "type": "number", "minimum": 0, "maximum": 1 }
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failed"
+          ]
+        },
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
       }
     },
-    "success_streak": { "type": "integer", "minimum": 0 },
-    "success_reason": { "type": ["string", "null"] },
-    "gene_library_version": { "type": ["string", "null"] },
-    "env_fingerprint": { "type": ["object", "null"] },
-    "source_type": { "type": ["string", "null"], "enum": ["generated", "reused", "reference", "user_authored", null] },
-    "reused_asset_id": { "type": ["string", "null"] },
-    "content": { "type": ["object", "null"] },
-    "diff": { "type": ["object", "null"] },
+    "success_streak": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "success_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "gene_library_version": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "env_fingerprint": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "source_type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "generated",
+        "reused",
+        "reference",
+        "user_authored",
+        null
+      ]
+    },
+    "reused_asset_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "content": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "diff": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
     "strategy": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "execution_trace": {
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
-          "stage": { "type": "string", "enum": ["build", "validate", "canary"] }
+          "stage": {
+            "type": "string",
+            "enum": [
+              "build",
+              "validate",
+              "canary"
+            ]
+          }
         }
       }
     },
-    "a2a": { "type": "object" },
-    "cost_tokens": { "type": ["integer", "null"], "minimum": 0 },
-    "cost_usd": { "type": ["number", "null"], "minimum": 0 },
+    "a2a": {
+      "type": "object"
+    },
+    "cost_tokens": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "cost_usd": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    },
     "trigger_context": {
       "type": "object",
       "properties": {
-        "prompt": { "type": "string", "maxLength": 2000 },
-        "reasoning_trace": { "type": "string", "maxLength": 4000 },
-        "context_signals": { "type": "array", "items": { "type": "string" } },
-        "session_id": { "type": "string" },
-        "agent_model": { "type": "string" }
+        "prompt": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "reasoning_trace": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "context_signals": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "session_id": {
+          "type": "string"
+        },
+        "agent_model": {
+          "type": "string"
+        }
       },
       "additionalProperties": false
     },
-    "asset_id": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "resolution_status": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "pending",
+        "suppressed_observationally",
+        "resolved_by_evidence",
+        "regressed",
+        "inconclusive",
+        null
+      ],
+      "description": "Two-level resolution outcome: resolved_by_evidence (strong) vs suppressed_observationally (weak); no automatic upgrade."
+    },
+    "proof_of_work": {
+      "type": "object",
+      "description": "Structured proof of work so output value is not keyed solely on a git diff.",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "git_diff",
+            "artifact_hash",
+            "external_receipt",
+            "tool_call_trace"
+          ]
+        },
+        "git_diff": {
+          "type": "object",
+          "properties": {
+            "files": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "lines": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "patch_ref": {
+              "type": "string"
+            }
+          }
+        },
+        "artifact_hash": {
+          "type": "object",
+          "properties": {
+            "sha256": {
+              "type": "string"
+            },
+            "mime": {
+              "type": "string"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "external_receipt": {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string"
+            },
+            "receipt_id": {
+              "type": "string"
+            },
+            "ts": {
+              "type": "string"
+            }
+          }
+        },
+        "tool_call_trace": {
+          "type": "object",
+          "properties": {
+            "calls": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ref": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "asset_id": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
     "visibility": {
-      "type": ["string", "null"],
-      "enum": ["private", "unlisted", "public", null]
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "private",
+        "unlisted",
+        "public",
+        null
+      ]
     },
     "scope": {
-      "type": ["array", "null"],
-      "items": { "type": "string", "minLength": 1 }
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     },
     "cost_tier": {
-      "type": ["string", "null"],
-      "enum": ["cheap", "standard", "premium", null]
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "cheap",
+        "standard",
+        "premium",
+        null
+      ]
     },
     "pack_of": {
-      "type": ["array", "null"],
-      "items": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string",
+        "pattern": "^sha256:[a-f0-9]{64}$"
+      }
     },
     "author": {
-      "type": ["object", "null"],
-      "required": ["handle", "evox_install_id"],
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "handle",
+        "evox_install_id"
+      ],
       "properties": {
-        "handle": { "type": "string", "minLength": 1 },
-        "evox_install_id": { "type": "string", "minLength": 1 }
+        "handle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evox_install_id": {
+          "type": "string",
+          "minLength": 1
+        }
       },
       "additionalProperties": false
     }
