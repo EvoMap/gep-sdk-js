@@ -1,6 +1,6 @@
 {
   "name": "@evomap/gep-sdk",
-  "version": "1.5.0",
+  "version": "1.10.0",
   "description": "Single source of truth for the Genome Evolution Protocol (GEP): JSON Schemas, specification, and protocol-level helpers (canonicalize / computeAssetId / verifyAssetId).",
   "main": "src/index.js",
   "type": "module",
@@ -13,9 +13,19 @@
     "./schemas/mutation.schema.json": "./schemas/mutation.schema.json",
     "./schemas/task.schema.json": "./schemas/task.schema.json",
     "./schemas/recipe.schema.json": "./schemas/recipe.schema.json",
-    "./spec/gep-spec-v1.md": "./spec/gep-spec-v1.md"
+    "./spec/gep-spec-v1.md": "./spec/gep-spec-v1.md",
+    "./schemas/pack.schema.json": "./schemas/pack.schema.json"
   },
-  "keywords": ["gep", "protocol", "schema", "ai-agent", "evolution", "self-evolution", "mcp", "evomap"],
+  "keywords": [
+    "gep",
+    "protocol",
+    "schema",
+    "ai-agent",
+    "evolution",
+    "self-evolution",
+    "mcp",
+    "evomap"
+  ],
   "files": [
     "src",
     "schemas",
