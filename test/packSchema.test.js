@@ -39,3 +39,7 @@ test('schema: owner is strict (additionalProperties false) and handle is non-emp
   assert.equal(SCHEMA.properties.owner.additionalProperties, false);
   assert.equal(SCHEMA.properties.owner.properties.handle.minLength, 1);
 });
+
+test('schema: type discriminator is PascalCase Pack (consistent with Gene/Capsule/Task)', () => {
+  assert.equal(SCHEMA.properties.type.const, 'Pack');
+});

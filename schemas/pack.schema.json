@@ -15,7 +15,7 @@
   ],
   "properties": {
     "type": {
-      "const": "pack"
+      "const": "Pack"
     },
     "id": {
       "type": "string",
