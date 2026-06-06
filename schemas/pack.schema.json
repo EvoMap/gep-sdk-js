@@ -5,32 +5,85 @@
   "description": "A curated whitelist of Gene ids with a display name and visibility. A Pack never carries gene bodies (those live in the gene asset store); it is a curation list, not content-addressable. The id is a slug, not a content hash.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "type", "name", "gene_ids", "visibility", "created_at"],
+  "required": [
+    "id",
+    "type",
+    "name",
+    "gene_ids",
+    "visibility",
+    "created_at"
+  ],
   "properties": {
-    "type": { "const": "pack" },
-    "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
-    "name": { "type": "string", "minLength": 1, "maxLength": 80 },
-    "description": { "type": "string", "maxLength": 500 },
+    "type": {
+      "const": "pack"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500
+    },
     "gene_ids": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "minItems": 0,
       "maxItems": 64,
       "uniqueItems": true
     },
-    "scope": { "type": "array", "items": { "type": "string" } },
-    "visibility": { "enum": ["private", "unlisted", "public"] },
-    "owner": {
-      "type": "object",
-      "required": ["handle"],
-      "properties": {
-        "handle": { "type": "string" },
-        "install_id": { "type": "string" }
+    "scope": {
+      "type": "array",
+      "items": {
+        "type": "string"
       }
     },
-    "author_node_id": { "type": "string" },
-    "source_type": { "enum": ["user_authored"], "default": "user_authored" },
-    "created_at": { "type": "string", "format": "date-time" },
-    "updated_at": { "type": "string", "format": "date-time" }
+    "visibility": {
+      "enum": [
+        "private",
+        "unlisted",
+        "public"
+      ]
+    },
+    "owner": {
+      "type": "object",
+      "required": [
+        "handle"
+      ],
+      "properties": {
+        "handle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "install_id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "author_node_id": {
+      "type": "string"
+    },
+    "source_type": {
+      "enum": [
+        "user_authored"
+      ],
+      "default": "user_authored"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
   }
 }

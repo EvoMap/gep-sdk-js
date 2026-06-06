@@ -34,3 +34,8 @@ test('schema: id is a slug, not a content hash', () => {
 test('package: pack schema is exported', () => {
   assert.ok(PKG.exports['./schemas/pack.schema.json']);
 });
+
+test('schema: owner is strict (additionalProperties false) and handle is non-empty', () => {
+  assert.equal(SCHEMA.properties.owner.additionalProperties, false);
+  assert.equal(SCHEMA.properties.owner.properties.handle.minLength, 1);
+});
