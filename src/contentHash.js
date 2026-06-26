@@ -19,7 +19,7 @@ import { createHash } from 'node:crypto';
 // `spec/gep-spec-v1.md` shipped in this package — that is exactly what
 // downstream implementations (evolver, gep-mcp-server, evox-Rust)
 // consume to detect protocol drift.
-export const SCHEMA_VERSION = '1.12.0';
+export const SCHEMA_VERSION = '1.12.1';
 
 export function canonicalize(obj) {
   if (obj === null || obj === undefined) return 'null';

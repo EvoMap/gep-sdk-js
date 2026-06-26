@@ -1,7 +1,7 @@
 # GEP: Genome Evolution Protocol
 
 **Version:** 1.0.0
-**Schema Version:** 1.12.0
+**Schema Version:** 1.12.1
 **Status:** Draft
 **Date:** 2026-06-26
 
@@ -695,6 +695,13 @@ Enhanced inference adjusts the base score by:
 ---
 
 ## Appendix C: Schema Version History
+
+### 1.12.1 (2026-06-26)
+
+Release-hygiene patch for the JavaScript SDK package. No schema fields
+or canonicalization rules changed from 1.12.0; this patch ships
+TypeScript declarations and package metadata so TS consumers can typecheck
+the public protocol boundary.
 
 ### 1.12.0 (2026-06-26)
 
