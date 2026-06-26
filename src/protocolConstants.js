@@ -61,3 +61,32 @@ export const GEP_CAPSULE_COST_TIERS = Object.freeze([
   'standard',
   'premium',
 ]);
+
+// Optional Gene.routing_hint tier — the cost class an EvoX-side router
+// (e.g. evox model_router) should prefer when this gene is selected.
+// NOTE: this is the routing-hint axis (`cheap|mid|expensive`) and is
+// deliberately distinct from GEP_CAPSULE_COST_TIERS (`cheap|standard|
+// premium`), which selects published capsules by price. The Rust side
+// (`crates/evox-evo-session`) does case-sensitive matching on these.
+export const GEP_GENE_ROUTING_TIERS = Object.freeze([
+  'cheap',
+  'mid',
+  'expensive',
+]);
+
+// Optional Gene.routing_hint reasoning level — how much reasoning budget
+// the router should grant. `off` disables extended reasoning.
+export const GEP_GENE_REASONING_LEVELS = Object.freeze([
+  'off',
+  'low',
+  'medium',
+  'high',
+]);
+
+// Optional Gene.tool_policy severity — whether a tool-gate violation
+// warns or hard-blocks the tool call. Defaults to `warn` when a policy
+// list is present but severity is omitted.
+export const GEP_GENE_TOOL_POLICY_SEVERITIES = Object.freeze([
+  'warn',
+  'block',
+]);

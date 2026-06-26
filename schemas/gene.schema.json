@@ -74,6 +74,25 @@
         }
       }
     },
+    "routing_hint": {
+      "type": ["object", "null"],
+      "description": "Optional EvoX-side routing hints consumed by the gene -> router/tool-gate pipeline. Absent or empty (no recognized keys) means 'no opinion'; the router takes its historical fast path.",
+      "properties": {
+        "tier": { "type": "string", "enum": ["cheap", "mid", "expensive"] },
+        "reasoning_level": { "type": "string", "enum": ["off", "low", "medium", "high"] }
+      },
+      "additionalProperties": false
+    },
+    "tool_policy": {
+      "type": ["object", "null"],
+      "description": "Optional EvoX-side tool gate. When a list is present, severity defaults to 'warn'. An empty allow_only is invalid (it would block every tool), so producers MUST omit empty lists.",
+      "properties": {
+        "allow_only": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+        "deny": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+        "severity": { "type": "string", "enum": ["warn", "block"] }
+      },
+      "additionalProperties": false
+    },
     "asset_id": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
   },
   "additionalProperties": false

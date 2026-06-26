@@ -1,9 +1,9 @@
 # GEP: Genome Evolution Protocol
 
 **Version:** 1.0.0
-**Schema Version:** 1.11.0
+**Schema Version:** 1.12.0
 **Status:** Draft
-**Date:** 2026-05-24
+**Date:** 2026-06-26
 
 > Licensed under [Creative Commons Attribution 4.0 International (CC-BY-4.0)](./LICENSE-CC-BY-4.0.txt).
 > "EvoMap", "GEP", and "Genome Evolution Protocol" are trademarks of EvoMap;
@@ -67,6 +67,8 @@ A Gene is a reusable evolution strategy. It defines what signals it responds to,
 | `epigenetic_marks` | string[] | no | Runtime-applied behavioral modifiers |
 | `learning_history` | object[] | no | Append-only log of selection / outcome / drift events; trimmed to the last 20 entries |
 | `anti_patterns` | object[] | no | Failure modes the gene must avoid (consulted by the selector to suppress drift); trimmed to the last 12 entries |
+| `routing_hint` | object\|null | no | EvoX-side routing hints `{ tier: "cheap"\|"mid"\|"expensive", reasoning_level: "off"\|"low"\|"medium"\|"high" }`. Absent or empty = "no opinion"; the router takes its historical fast path |
+| `tool_policy` | object\|null | no | EvoX-side tool gate `{ allow_only: string[], deny: string[], severity: "warn"\|"block" }`. `severity` defaults to `"warn"` when a list is present; `allow_only` MUST be non-empty when present (an empty list would block every tool) |
 | `asset_id` | string | yes | Content-addressable hash |
 
 **Constraints object:**
@@ -129,6 +131,7 @@ A Capsule is the record of a single successful evolution. It captures what trigg
 | `a2a` | object | no | Agent-to-agent exchange metadata |
 | `cost_tokens` | integer | no | Total tokens spent producing this evolution (input + output + cache); non-negative |
 | `cost_usd` | float | no | Estimated USD spend producing this evolution; non-negative |
+| `derivation_tokens` | object\|null | no | Real measured token cost of deriving this capsule `{input_tokens, output_tokens, total_tokens, basis}`, captured from the proxy trace meter at solidify time; `null` when usage was unobserved. Distinct from the point-in-time `cost_tokens`/`cost_usd` scalars |
 | `trigger_context` | object | no | Optional `{prompt, reasoning_trace, context_signals[], session_id, agent_model}` — what the user/agent was doing when this evolution fired |
 | `asset_id` | string | yes | Content-addressable hash |
 
@@ -692,6 +695,49 @@ Enhanced inference adjusts the base score by:
 ---
 
 ## Appendix C: Schema Version History
+
+### 1.12.0 (2026-06-26)
+
+Additive fields that bring the schemas back into lockstep with the
+reference engine ([`evolver`](https://github.com/EvoMap/evolver)), which
+had been emitting these on the wire ahead of the spec. All changes are
+backward-compatible; pre-1.12.0 assets validate unchanged and their
+`asset_id` is byte-stable under §5 because absent properties never enter
+the canonical form.
+
+**Gene fields added (both optional):**
+- `routing_hint` — object\|null `{ tier: "cheap"|"mid"|"expensive",
+  reasoning_level: "off"|"low"|"medium"|"high" }`. EvoX-side routing
+  hints consumed by the gene → router / tool-gate pipeline. Absent or
+  empty (no recognized keys) means "no opinion"; the router takes its
+  historical fast path.
+- `tool_policy` — object\|null `{ allow_only: string[], deny: string[],
+  severity: "warn"|"block" }`. EvoX-side tool gate. `severity` defaults
+  to `"warn"` when a list is present. `allow_only` MUST be non-empty when
+  present — an empty `allow_only` means "allow zero tools" on the Rust
+  executor gate and would block every tool call, so producers omit it.
+
+**Capsule field added (optional):**
+- `derivation_tokens` — object\|null `{ input_tokens, output_tokens,
+  total_tokens, basis }`. Real measured token cost of deriving the
+  capsule (input + output), captured from the proxy trace meter at
+  solidify time; `null` when the proxy was inactive or usage was
+  unobserved. Distinct from the point-in-time `cost_tokens` / `cost_usd`
+  scalars, which are estimates — `derivation_tokens` carries the
+  measured basis.
+
+**Protocol constants (`@evomap/gep-sdk` JS exports):**
+- New: `GEP_GENE_ROUTING_TIERS` = `['cheap', 'mid', 'expensive']`.
+- New: `GEP_GENE_REASONING_LEVELS` = `['off', 'low', 'medium', 'high']`.
+- New: `GEP_GENE_TOOL_POLICY_SEVERITIES` = `['warn', 'block']`.
+
+These let evolver / evox-Rust share the routing/tool-policy enums with
+the schema instead of re-declaring them per consumer.
+
+> Note: the 1.9.0–1.11.0 revisions (recipe + pack asset types, the
+> `resolution_status` / `proof_of_work` Capsule fields) shipped in the
+> JSON Schemas and `SCHEMA_VERSION` constant ahead of this appendix;
+> their dedicated history entries are still to be backfilled.
 
 ### 1.8.0 (2026-05-24)
 
