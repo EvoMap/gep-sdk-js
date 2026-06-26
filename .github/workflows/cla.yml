@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   cla-check:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.CI_LABEL_LINUX_X64) }}
     if: |
       (github.event.comment.body == 'recheck' ||
        github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') ||
