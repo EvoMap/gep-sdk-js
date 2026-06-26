@@ -54,9 +54,9 @@ test('schema: additionalProperties true (forward-compatible, like task)', () => 
   assert.equal(SCHEMA.properties.steps.items.additionalProperties, true);
 });
 
-test('package: recipe schema is exported and SCHEMA_VERSION is 1.12.0', () => {
+test('package: recipe schema is exported and SCHEMA_VERSION matches package metadata', () => {
   assert.equal(PKG.exports['./schemas/recipe.schema.json'], './schemas/recipe.schema.json');
-  assert.equal(SCHEMA_VERSION, '1.12.0');
+  assert.equal(SCHEMA_VERSION, PKG.version);
 });
 
 test('sample: a minimal valid recipe payload has the expected shape', () => {

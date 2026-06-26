@@ -1,12 +1,21 @@
 {
   "name": "@evomap/gep-sdk",
-  "version": "1.12.0",
+  "version": "1.12.1",
   "description": "Single source of truth for the Genome Evolution Protocol (GEP): JSON Schemas, specification, and protocol-level helpers (canonicalize / computeAssetId / verifyAssetId).",
   "main": "src/index.js",
+  "types": "src/index.d.ts",
   "type": "module",
   "exports": {
-    ".": "./src/index.js",
-    "./content-hash": "./src/contentHash.js",
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js",
+      "default": "./src/index.js"
+    },
+    "./content-hash": {
+      "types": "./src/contentHash.d.ts",
+      "import": "./src/contentHash.js",
+      "default": "./src/contentHash.js"
+    },
     "./schemas/gene.schema.json": "./schemas/gene.schema.json",
     "./schemas/capsule.schema.json": "./schemas/capsule.schema.json",
     "./schemas/evolution-event.schema.json": "./schemas/evolution-event.schema.json",
@@ -28,6 +37,7 @@
   ],
   "files": [
     "src",
+    "src/*.d.ts",
     "schemas",
     "spec",
     "LICENSE",
