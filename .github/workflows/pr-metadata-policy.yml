@@ -1,0 +1,57 @@
+name: pr metadata policy
+
+# `pull_request_target` (not `pull_request`) is deliberate and load-bearing.
+#
+# This gate derives its contract from the repository's PR template. Under
+# `pull_request`, the checkout is the PR *head*, so a change could delete a
+# section from the template and the gate would stop requiring it — in the very
+# PR that removed it. `pull_request_target` checks out the BASE branch, so the
+# contract under enforcement is always the one already merged.
+#
+# The usual `pull_request_target` hazard is running untrusted head code with a
+# privileged token. That hazard does not apply here: this job never checks out,
+# builds, or executes anything from the head. It reads the base-branch template
+# and the PR body text — data, not code — and the token stays read-only.
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, synchronize, ready_for_review]
+  # Merge queues re-evaluate required checks on the queued candidate. Without
+  # this, a repository with a merge queue would see the check as permanently
+  # pending and nothing would ever merge.
+  merge_group:
+
+permissions:
+  contents: read
+
+jobs:
+  pr-metadata-policy:
+    name: pr metadata policy
+    # Self-hosted where the org provides a label, GitHub-hosted otherwise. The
+    # fallback matters: this job must be able to run in a repo that has no
+    # self-hosted capacity, or adopting it would mean adopting a runner
+    # dependency. Override CI_LABEL_LINUX_X64 at the org/repo level to pin it.
+    runs-on: ${{ vars.CI_LABEL_LINUX_X64 && fromJSON(vars.CI_LABEL_LINUX_X64) || 'ubuntu-latest' }}
+    steps:
+      - name: Check out base branch (never the PR head)
+        uses: actions/checkout@v4
+        with:
+          # For merge_group there is no pull_request payload; the default ref is
+          # already the queued candidate, so leave it alone in that case.
+          ref: ${{ github.event.pull_request.base.sha || '' }}
+          # Only the template and the validator are read. No history needed.
+          fetch-depth: 1
+
+      # merge_group carries no PR body to check. The job must still report a
+      # conclusion so the required check resolves instead of hanging pending.
+      - name: Skip on merge queue (no PR body to validate)
+        if: github.event_name == 'merge_group'
+        run: echo "merge_group event carries no PR body; the contract was enforced on the pull request itself."
+
+      - name: Validate PR metadata against the base-branch template
+        if: github.event_name != 'merge_group'
+        env:
+          # Passed as an env var, never interpolated into the shell. A PR body is
+          # attacker-controlled text; `${{ github.event.pull_request.body }}`
+          # inside a `run:` block would be a shell injection.
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: python3 scripts/validate_pr_metadata.py --repo-root .
