@@ -112,7 +112,8 @@ class Contract:
 
     @property
     def required_declarations(self) -> tuple[Declaration, ...]:
-        return tuple(declaration for declaration in self.declarations if declaration.required)
+        required = (d for d in self.declarations if d.required)
+        return tuple(required)
 
 
 def _comment_spans(text: str) -> list[tuple[int, int]]:
@@ -193,7 +194,8 @@ def _offered_choices(template_default: str) -> set[str]:
     default = normalize(template_default)
     if "|" not in default:
         return set()
-    return {choice.strip().casefold() for choice in default.split("|") if choice.strip()}
+    choices = default.split("|")
+    return {c.strip().casefold() for c in choices if c.strip()}
 
 
 def is_answered(value: str, template_default: str = "") -> bool:
@@ -234,7 +236,8 @@ def _split_blocks(text: str) -> tuple[str, list[tuple[str, str]]]:
     preamble = (text or "")[: matches[0].start()]
     blocks: list[tuple[str, str]] = []
     for index, match in enumerate(matches):
-        end = matches[index + 1].start() if index + 1 < len(matches) else len(text or "")
+        last = index + 1 >= len(matches)
+        end = len(text or "") if last else matches[index + 1].start()
         blocks.append((match.group("heading"), (text or "")[match.end() : end]))
     return preamble, blocks
 
@@ -249,10 +252,16 @@ def _parse_declarations(preamble: str) -> list[tuple[str, str, bool]]:
     # while preserving line count keeps the optional-marker lookup below aligned
     # with the original lines.
     stripped_lines = _blank_comment_spans(preamble).splitlines()
-    for raw_line, line in zip(preamble.splitlines(), stripped_lines):
+    # strict=True is not decoration: it asserts the invariant the comment above
+    # depends on. Blanking preserves line count, so the two lists must be the
+    # same length; if a future change to _blank_comment_spans ever drops or adds
+    # a line, the optional-marker lookup would silently read the marker off the
+    # WRONG line and quietly mis-classify a required field. Fail loudly instead.
+    raw_lines = preamble.splitlines()
+    for raw_line, line in zip(raw_lines, stripped_lines, strict=True):
         optional = OPTIONAL_MARKER in raw_line
         line = line.strip()
-        if not line or line.startswith("#") or line.startswith(">") or line.startswith("-"):
+        if not line or line[0] in "#>-":
             continue
         match = DECLARATION_RE.match(line)
         if match is None:
@@ -301,7 +310,7 @@ def _body_declarations(body: str) -> dict[str, str]:
 
 
 def validate_body(body: str, contract: Contract, *, min_sections: int = 2) -> list[str]:
-    """Return human-readable errors; an empty list means the body satisfies the contract."""
+    """Return human-readable errors; empty means the body satisfies the contract."""
     errors: list[str] = []
 
     # Fail closed on an empty contract. A gutted or unparseable template would
@@ -310,26 +319,29 @@ def validate_body(body: str, contract: Contract, *, min_sections: int = 2) -> li
     # scan found something before trusting a clean result.
     if len(contract.required_sections) < min_sections:
         return [
-            f"PR template contract looks empty: derived only {len(contract.required_sections)} required "
-            f"section(s), expected at least {min_sections}. The template was probably gutted, moved, or "
-            "is being read from the wrong path — a vacuous pass is worse than no gate. "
+            f"PR template contract looks empty: derived only "
+            f"{len(contract.required_sections)} required section(s), expected at "
+            f"least {min_sections}. The template was probably gutted, moved, or is "
+            "being read from the wrong path — a vacuous pass is worse than no gate. "
             "Check `.github/PULL_REQUEST_TEMPLATE.md` on the base branch."
         ]
 
     if not normalize(body):
         return [
             "PR body is empty. Fill in the repository's pull-request template: "
-            + ", ".join(f"`## {section.heading}`" for section in contract.required_sections)
+            + ", ".join(f"`## {s.heading}`" for s in contract.required_sections)
         ]
 
     present_sections = _body_sections(body)
     for section in contract.required_sections:
         key = normalize(section.heading).casefold()
         if key not in present_sections:
-            errors.append(f"PR body is missing required section `## {section.heading}`.")
+            missing = f"`## {section.heading}`"
+            errors.append(f"PR body is missing required section {missing}.")
         elif not is_answered(present_sections[key], section.template_body):
             errors.append(
-                f"`## {section.heading}` is empty. Replace the template's guidance with a concrete "
+                f"`## {section.heading}` is empty. Replace the template's "
+                "guidance with a concrete "
                 "answer, or an explained not-applicable reason."
             )
 
@@ -337,10 +349,12 @@ def validate_body(body: str, contract: Contract, *, min_sections: int = 2) -> li
     for declaration in contract.required_declarations:
         key = normalize(declaration.label).casefold()
         if key not in present_declarations:
-            errors.append(f"PR body is missing required declaration `{declaration.label}:`.")
+            missing = f"`{declaration.label}:`"
+            errors.append(f"PR body is missing required declaration {missing}.")
         elif not is_answered(present_declarations[key], declaration.template_value):
             errors.append(
-                f"Declaration `{declaration.label}:` is unanswered. Choose a value instead of leaving "
+                f"Declaration `{declaration.label}:` is unanswered. Choose a "
+                "value instead of leaving "
                 "the template's placeholder in place."
             )
 
@@ -380,7 +394,10 @@ def resolve_case_insensitively(path: pathlib.Path) -> pathlib.Path | None:
     return fallback
 
 
-def find_template(repo_root: pathlib.Path, explicit: pathlib.Path | None = None) -> pathlib.Path:
+def find_template(
+    repo_root: pathlib.Path,
+    explicit: pathlib.Path | None = None,
+) -> pathlib.Path:
     if explicit is not None:
         if not explicit.exists():
             raise SystemExit(f"PR template not found at {explicit}")
@@ -392,7 +409,8 @@ def find_template(repo_root: pathlib.Path, explicit: pathlib.Path | None = None)
         if resolved is not None:
             return resolved
     raise SystemExit(
-        "No pull-request template found. This gate derives its contract from the template, so it "
+        "No pull-request template found. This gate derives its contract from "
+        "the template, so it "
         "cannot run without one. Install the `pr-template` module first: searched "
         + ", ".join(TEMPLATE_CANDIDATES)
     )
@@ -423,26 +441,46 @@ def report(errors: list[str], *, template_path: str) -> None:
     if summary_path:
         lines = ["## PR metadata policy failed", "", "### Problems"]
         lines.extend(f"- {error}" for error in errors)
-        lines.extend(["", f"Contract derived from `{template_path}` (base branch).", "", "### Required reading"])
+        derived = f"Contract derived from `{template_path}` (base branch)."
+        lines.extend(["", derived, "", "### Required reading"])
         lines.extend(f"- `{reference}`" for reference in RULE_REFERENCES)
         with open(summary_path, "a", encoding="utf-8") as handle:
             handle.write("\n".join(lines) + "\n")
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument("--repo-root", type=pathlib.Path, default=pathlib.Path("."))
-    parser.add_argument("--template", type=pathlib.Path, help="override template path (default: auto-detect)")
-    parser.add_argument("--event", type=pathlib.Path, help="GitHub event payload JSON to read the body from")
+    parser.add_argument(
+        "--template",
+        type=pathlib.Path,
+        help="override template path (default: auto-detect)",
+    )
+    parser.add_argument(
+        "--event",
+        type=pathlib.Path,
+        help="GitHub event payload JSON to read the body from",
+    )
     parser.add_argument("--body", help="PR body text (default: $PR_BODY)")
-    parser.add_argument("--body-file", type=pathlib.Path, help="file containing the PR body")
+    parser.add_argument(
+        "--body-file",
+        type=pathlib.Path,
+        help="file containing the PR body",
+    )
     parser.add_argument(
         "--min-sections",
         type=int,
         default=2,
-        help="sentinel floor: fail if the template yields fewer required sections (default: 2)",
+        help="sentinel floor: fail below this many required sections",
     )
-    parser.add_argument("--print-contract", action="store_true", help="print the derived contract and exit")
+    parser.add_argument(
+        "--print-contract",
+        action="store_true",
+        help="print the derived contract and exit",
+    )
     args = parser.parse_args(argv)
 
     template_path = find_template(args.repo_root, args.template)
@@ -471,7 +509,8 @@ def main(argv: list[str] | None = None) -> int:
     if errors:
         report(errors, template_path=str(template_path))
         return 1
-    print(f"PR metadata policy passed ({len(contract.required_sections)} required sections checked).")
+    n = len(contract.required_sections)
+    print(f"PR metadata policy passed ({n} required sections checked).")
     return 0
 
 
