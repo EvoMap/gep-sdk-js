@@ -41,8 +41,12 @@ jobs:
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           # For merge_group there is no pull_request payload; the default ref is
-          # already the queued candidate, so leave it alone in that case.
-          ref: ${{ github.event.pull_request.base.sha || '' }}
+          # already the queued candidate, so leave it alone in that case. For
+          # pull_request_target, read the current base branch by name rather than
+          # the event's base SHA: old PRs keep the SHA from the base they were
+          # opened against, which can predate this validator and leave a newly-
+          # required check permanently red after a body edit.
+          ref: ${{ github.event.pull_request.base.ref || '' }}
           # Only the template and the validator are read. No history needed.
           fetch-depth: 1
 
