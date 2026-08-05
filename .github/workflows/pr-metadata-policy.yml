@@ -42,11 +42,11 @@ jobs:
         with:
           # For merge_group there is no pull_request payload; the default ref is
           # already the queued candidate, so leave it alone in that case. For
-          # pull_request_target, read the current base branch by name rather than
-          # the event's base SHA: old PRs keep the SHA from the base they were
-          # opened against, which can predate this validator and leave a newly-
-          # required check permanently red after a body edit.
-          ref: ${{ github.event.pull_request.base.ref || '' }}
+          # pull_request_target, read the base repository's default branch rather
+          # than the PR's base ref/SHA: stacked PRs often target feature branches
+          # created before this gate existed, so reading that base can miss the
+          # validator and leave a newly-required check permanently red.
+          ref: ${{ github.event.pull_request.base.repo.default_branch || '' }}
           # Only the template and the validator are read. No history needed.
           fetch-depth: 1
 
