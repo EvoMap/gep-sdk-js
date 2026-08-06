@@ -72,6 +72,11 @@ PLACEHOLDER_RE = re.compile(
     re.IGNORECASE,
 )
 
+# "and so on" written inside a template's choice menu. A menu entry matching this
+# is the template trailing off, not an alternative the author may select, so it
+# must not become an accepted answer when the menu is parsed.
+CONTINUATION_RE = re.compile(r"^(?:\.{2,}|…+|etc\.?|and so on)$", re.IGNORECASE)
+
 TEMPLATE_CANDIDATES = (
     ".github/PULL_REQUEST_TEMPLATE.md",
     ".github/pull_request_template.md",
@@ -190,12 +195,39 @@ def _offered_choices(template_default: str) -> set[str]:
     placeholder. `Data egress impact: none | local-only | network-content` makes
     `none` the correct answer for a docs change, so the placeholder filter must
     not reject it — the author picked from the menu the repo wrote.
+
+    Real templates write the menu two ways, and both have to count. EvoX writes
+    `Builds on: <#PR / #issue / docs/… path / none>` and documents `none` as the
+    answer for genuinely fresh work, so recognising only the pipe form rejected
+    the answer the repo's own template told the author to give.
+
+    Two details keep the slash form from over-accepting:
+
+    * The separator must be a SPACED slash. A bare `/` is a path separator, so
+      splitting on it would shred `docs/… path` into bogus choices and promote
+      every single path component into an "offered" answer.
+    * A continuation marker is not a choice. `Phase: <feature | fix | ... >`
+      offers three phases and an et-cetera; without this filter, stripping the
+      angle brackets would make the literal `...` a valid answer. Placeholder-
+      LOOKING choices such as `none` are kept on purpose — a word the template
+      lists is an answer, which is the whole point of this function.
     """
     default = normalize(template_default)
-    if "|" not in default:
+    # Templates bracket the menu as often as not (`<a / b / c>`). The brackets
+    # are punctuation around the list, not part of the first and last choice.
+    if default.startswith("<") and default.endswith(">"):
+        default = default[1:-1].strip()
+    if "|" in default:
+        parts = default.split("|")
+    elif " / " in default:
+        parts = default.split(" / ")
+    else:
         return set()
-    choices = default.split("|")
-    return {c.strip().casefold() for c in choices if c.strip()}
+    return {
+        choice.casefold()
+        for choice in (part.strip() for part in parts)
+        if choice and not CONTINUATION_RE.fullmatch(choice)
+    }
 
 
 def is_answered(value: str, template_default: str = "") -> bool:
