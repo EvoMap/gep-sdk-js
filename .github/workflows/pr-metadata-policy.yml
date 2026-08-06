@@ -26,11 +26,23 @@ permissions:
 jobs:
   pr-metadata-policy:
     name: pr metadata policy
-    # Self-hosted where the org provides a label, GitHub-hosted otherwise. The
-    # fallback matters: this job must be able to run in a repo that has no
-    # self-hosted capacity, or adopting it would mean adopting a runner
-    # dependency. Override CI_LABEL_LINUX_X64 at the org/repo level to pin it.
-    runs-on: ${{ vars.CI_LABEL_LINUX_X64 && fromJSON(vars.CI_LABEL_LINUX_X64) || 'ubuntu-latest' }}
+    # GitHub-hosted by default, even in an org with a large self-hosted fleet.
+    #
+    # This job is a few seconds of stdlib Python with no build, no toolchain and
+    # no cache to reuse, so a self-hosted queue buys it nothing and costs it the
+    # thing that matters most for a REQUIRED check: a guaranteed conclusion. On
+    # the EvoMap fleet, routing it to `[self-hosted, Linux, X64]` produced jobs
+    # cancelled with "not acquired by Runner of type self-hosted even after
+    # multiple attempts" — a pool whose autoscaled members can report online and
+    # still fail to pick up work. A required check that never reaches a
+    # conclusion blocks the PR exactly as hard as a failing one, and no amount of
+    # re-running fixes it reliably.
+    #
+    # PR_GATE_RUNNER is a dedicated opt-in, deliberately NOT the org's general
+    # CI label: a repo that wants this job on its own capacity sets it, and
+    # nobody inherits a runner dependency by having a fleet. Set it to a JSON
+    # array of labels, e.g. '["self-hosted","Linux","X64"]'.
+    runs-on: ${{ vars.PR_GATE_RUNNER && fromJSON(vars.PR_GATE_RUNNER) || 'ubuntu-latest' }}
     steps:
       - name: Check out base branch (never the PR head)
         # Pinned to a full commit SHA, not a tag: a tag is mutable, so `@v4`
