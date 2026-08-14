@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION: '1.12.1';
+export const SCHEMA_VERSION: '1.13.0';
 
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue | undefined };

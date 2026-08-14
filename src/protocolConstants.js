@@ -90,3 +90,35 @@ export const GEP_GENE_TOOL_POLICY_SEVERITIES = Object.freeze([
   'warn',
   'block',
 ]);
+
+// Five-coordinate evidence-projection axes (schema 1.13.0). These carry the
+// machine-decidable coordinates a gene must state to enter the strict K_auto
+// subdomain (claim-level conflict detection, verifier-specific projection).
+// The version + content_hash coordinates already exist as schema_version and
+// asset_id; these constants cover the remaining decidable axes. Absent axes
+// keep a gene OUT of K_auto — undecidable coordinates never get benefit of the
+// doubt, matching evolver-core's kautoValidator conservatism.
+
+// Gene.claims[].kind — the class of assertion a claim makes.
+export const GEP_GENE_CLAIM_KINDS = Object.freeze([
+  'behavioral',
+  'structural',
+  'performance',
+  'safety',
+]);
+
+// Gene.runtime_profile.env_class — the execution environment class under
+// which a gene's claims were established.
+export const GEP_GENE_RUNTIME_ENV_CLASSES = Object.freeze([
+  'ci',
+  'local',
+  'prod',
+  'sandbox',
+]);
+
+// Gene.verifier_profile.decision — the verifier's judgement on the claims.
+export const GEP_GENE_VERIFIER_DECISIONS = Object.freeze([
+  'pass',
+  'fail',
+  'inconclusive',
+]);
