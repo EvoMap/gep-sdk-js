@@ -54,3 +54,23 @@ export const GEP_GENE_TOOL_POLICY_SEVERITIES: readonly [
   'warn',
   'block',
 ];
+
+export const GEP_GENE_CLAIM_KINDS: readonly [
+  'behavioral',
+  'structural',
+  'performance',
+  'safety',
+];
+
+export const GEP_GENE_RUNTIME_ENV_CLASSES: readonly [
+  'ci',
+  'local',
+  'prod',
+  'sandbox',
+];
+
+export const GEP_GENE_VERIFIER_DECISIONS: readonly [
+  'pass',
+  'fail',
+  'inconclusive',
+];

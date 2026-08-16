@@ -1,7 +1,7 @@
 # GEP: Genome Evolution Protocol
 
 **Version:** 1.0.0
-**Schema Version:** 1.12.1
+**Schema Version:** 1.13.0
 **Status:** Draft
 **Date:** 2026-06-26
 
@@ -69,6 +69,10 @@ A Gene is a reusable evolution strategy. It defines what signals it responds to,
 | `anti_patterns` | object[] | no | Failure modes the gene must avoid (consulted by the selector to suppress drift); trimmed to the last 12 entries |
 | `routing_hint` | object\|null | no | EvoX-side routing hints `{ tier: "cheap"\|"mid"\|"expensive", reasoning_level: "off"\|"low"\|"medium"\|"high" }`. Absent or empty = "no opinion"; the router takes its historical fast path |
 | `tool_policy` | object\|null | no | EvoX-side tool gate `{ allow_only: string[], deny: string[], severity: "warn"\|"block" }`. `severity` defaults to `"warn"` when a list is present; `allow_only` MUST be non-empty when present (an empty list would block every tool) |
+| `claims` | array\|null | no | Machine-decidable claims this gene asserts, each `{ predicate: string, kind?: "behavioral"\|"structural"\|"performance"\|"safety" }`. One coordinate of the five-coordinate evidence projection. Producers that cannot state a decidable predicate MUST omit this, not emit a vague string |
+| `scope` | object\|null | no | Machine-decidable scope predicate `{ signals: string[], predicate: string }`. `signals` are runtime-vocabulary tokens (not source identifiers) so a resolver can decide membership. Absent = unscoped, which keeps the gene OUT of the strict K_auto subdomain |
+| `runtime_profile` | object\|null | no | Runtime coordinate `{ runtime: string, env_class?: "ci"\|"local"\|"prod"\|"sandbox" }` — the execution environment class under which the claims hold. Absent = runtime-agnostic |
+| `verifier_profile` | object\|null | no | Verifier coordinate `{ verifier: string, decision?: "pass"\|"fail"\|"inconclusive" }` — the verifier under whose judgement the claims were checked. Absent disqualifies the record from strict K_auto |
 | `asset_id` | string | yes | Content-addressable hash |
 
 **Constraints object:**
@@ -695,6 +699,39 @@ Enhanced inference adjusts the base score by:
 ---
 
 ## Appendix C: Schema Version History
+
+### 1.13.0 (2026-08-15)
+
+Additive fields that give a Gene the machine-decidable coordinates of the
+five-coordinate evidence projection. The version and content-hash coordinates
+already exist as `schema_version` and `asset_id`; 1.13.0 adds the remaining
+decidable axes so a gene can state *what* it claims, *where* the claim holds,
+and *who* verified it — the prerequisite for the strict K_auto subdomain
+(claim-level conflict detection, verifier-specific projection). All changes
+are backward-compatible; pre-1.13.0 assets validate unchanged and their
+`asset_id` is byte-stable under §5 because absent properties never enter the
+canonical form.
+
+**Gene fields added (all optional):**
+- `claims` — array\|null of `{ predicate: string, kind?: "behavioral"|
+  "structural"|"performance"|"safety" }`. Machine-decidable assertions the
+  gene guarantees. Producers that cannot state a decidable predicate MUST omit
+  this, not emit a vague string.
+- `scope` — object\|null `{ signals: string[], predicate: string }`. A
+  decidable scope predicate expressed over runtime signal-vocabulary tokens
+  (not source identifiers), so a resolver can decide membership. Absent means
+  "unscoped", which keeps the gene OUT of strict K_auto.
+- `runtime_profile` — object\|null `{ runtime: string, env_class?: "ci"|
+  "local"|"prod"|"sandbox" }`. The execution environment class under which the
+  claims were established and hold.
+- `verifier_profile` — object\|null `{ verifier: string, decision?: "pass"|
+  "fail"|"inconclusive" }`. The verifier under whose judgement the claims were
+  checked; verifier-specific projection uses this axis.
+
+**Producer contract (§5 reminder):** canonicalization keeps own-keys even when
+their value is `null`, so an explicit `claims: null` changes the `asset_id`.
+Producers with no coordinate MUST omit the key, not send `null` — the same
+omit-not-null rule the 1.12.0 `tool_policy` field documents.
 
 ### 1.12.1 (2026-06-26)
 
