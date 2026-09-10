@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { classifyCapsuleEvidence, REFERENCE_ONLY_EVIDENCE_MODE } from '../src/index.js';
 
 const schema = JSON.parse(readFileSync(new URL('../schemas/capsule.schema.json', import.meta.url)));
+const spec = readFileSync(new URL('../spec/gep-spec-v1.md', import.meta.url), 'utf8');
 function capsule(overrides = {}) {
   const text = '引用资料：你好';
   return {
@@ -43,7 +44,7 @@ test('omitted evidence_mode preserves legacy classification', () => {
   const result = classifyCapsuleEvidence(capsule(overrides));
   assert.equal(result.valid, false); assert.equal(result.reason.code, code); assert.ok(result.reason.path);
 }));
-test('reference-only schema encodes non-execution and text integrity invariants', () => {
+test('reference-only schema and specification encode non-execution and text integrity invariants', () => {
   const contract = schema.allOf.find(rule => rule.if?.properties?.evidence_mode?.const === 'reference_only')?.then;
   assert.ok(contract);
   assert.equal(contract.properties.blast_radius.properties.files.const, 0);
@@ -54,6 +55,8 @@ test('reference-only schema encodes non-execution and text integrity invariants'
   assert.equal(contract.properties.content.properties.text.pattern, '\\S');
   assert.equal(contract.properties.proof_of_work.properties.kind.const, 'artifact_hash');
   assert.equal(contract.properties.proof_of_work.properties.artifact_hash.properties.size.minimum, 1);
+  assert.match(spec, /`content\.mime` MUST be `"text\/plain"`/);
+  assert.match(spec, /`artifact_hash\.mime` MUST be `"text\/plain"` and equal `content\.mime`/);
 });
 
 test('invalid input is structured', () => {
