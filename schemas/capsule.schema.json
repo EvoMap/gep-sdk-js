@@ -393,7 +393,116 @@
         }
       },
       "additionalProperties": false
+    },
+    "evidence_mode": {
+      "type": "string",
+      "enum": [
+        "reference_only"
+      ]
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "evidence_mode": {
+            "const": "reference_only"
+          }
+        },
+        "required": [
+          "evidence_mode"
+        ]
+      },
+      "then": {
+        "required": [
+          "source_type",
+          "blast_radius",
+          "execution_trace",
+          "content",
+          "proof_of_work"
+        ],
+        "properties": {
+          "source_type": {
+            "const": "reference"
+          },
+          "blast_radius": {
+            "type": "object",
+            "required": [
+              "files",
+              "lines"
+            ],
+            "properties": {
+              "files": {
+                "const": 0
+              },
+              "lines": {
+                "const": 0
+              }
+            },
+            "additionalProperties": false
+          },
+          "execution_trace": {
+            "type": "array",
+            "maxItems": 0
+          },
+          "content": {
+            "type": "object",
+            "required": [
+              "text",
+              "mime"
+            ],
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "mime": {
+                "const": "text/plain"
+              }
+            }
+          },
+          "diff": {
+            "const": null
+          },
+          "proof_of_work": {
+            "type": "object",
+            "required": [
+              "kind",
+              "artifact_hash"
+            ],
+            "properties": {
+              "kind": {
+                "const": "artifact_hash"
+              },
+              "artifact_hash": {
+                "type": "object",
+                "required": [
+                  "sha256",
+                  "mime",
+                  "size"
+                ],
+                "properties": {
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "mime": {
+                    "const": "text/plain"
+                  },
+                  "size": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    }
+  ]
 }

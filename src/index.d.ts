@@ -1,3 +1,5 @@
+export { REFERENCE_ONLY_EVIDENCE_MODE, classifyCapsuleEvidence, validateCapsuleEvidence } from './capsuleEvidence.js';
+
 export {
   SCHEMA_VERSION,
   canonicalize,
@@ -19,4 +21,5 @@ export {
   GEP_GENE_CLAIM_KINDS,
   GEP_GENE_RUNTIME_ENV_CLASSES,
   GEP_GENE_VERIFIER_DECISIONS,
+  GEP_EVIDENCE_MODES,
 } from './protocolConstants.js';

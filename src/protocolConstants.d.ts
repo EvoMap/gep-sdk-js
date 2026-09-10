@@ -74,3 +74,5 @@ export const GEP_GENE_VERIFIER_DECISIONS: readonly [
   'fail',
   'inconclusive',
 ];
+
+export declare const GEP_EVIDENCE_MODES: readonly ['reference_only'];

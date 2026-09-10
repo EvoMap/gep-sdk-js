@@ -1,3 +1,5 @@
+export { REFERENCE_ONLY_EVIDENCE_MODE, classifyCapsuleEvidence, validateCapsuleEvidence } from './capsuleEvidence.js';
+
 // Copyright 2024-2026 EvoMap
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,4 +43,5 @@ export {
   GEP_GENE_CLAIM_KINDS,
   GEP_GENE_RUNTIME_ENV_CLASSES,
   GEP_GENE_VERIFIER_DECISIONS,
+  GEP_EVIDENCE_MODES,
 } from './protocolConstants.js';

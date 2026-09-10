@@ -25,7 +25,8 @@ copies.
 | `schemas/task.schema.json` | Task asset schema (bounty work items) |
 | `spec/gep-spec-v1.md` | Full protocol specification |
 | `src/contentHash.js` | `SCHEMA_VERSION`, `canonicalize`, `computeAssetId`, `verifyAssetId` |
-| `src/protocolConstants.js` | Shared protocol enums such as `GEP_GENE_CATEGORIES` and `GEP_OUTCOME_STATUSES` |
+| `src/protocolConstants.js` | Shared protocol enums such as `GEP_GENE_CATEGORIES`, `GEP_OUTCOME_STATUSES`, and `GEP_EVIDENCE_MODES` |
+| `src/capsuleEvidence.js` | Pure legacy/reference-only Capsule classifier and evidence hash validator |
 
 ## Install
 
@@ -140,3 +141,13 @@ Versions 1.3.0 and later are Apache-2.0. If you have an existing
 deployment on 1.2.x and need to remain on the GPL line, those releases
 remain available on npm; new fixes will be backported only on a
 best-effort basis.
+
+### Non-execution reference Capsules
+
+A Capsule may opt into `evidence_mode: "reference_only"` to record material that
+was not executed. The schema requires `source_type: "reference"`, an exact zero
+blast radius, an empty `execution_trace`, non-empty `content.text`, and an
+`artifact_hash` proof whose lowercase SHA-256 and byte size match the UTF-8 text.
+Use `classifyCapsuleEvidence` (also exported as `validateCapsuleEvidence`) for
+a pure structured validation result. Omitting `evidence_mode` preserves legacy
+Capsule behaviour.

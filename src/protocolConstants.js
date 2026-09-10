@@ -122,3 +122,5 @@ export const GEP_GENE_VERIFIER_DECISIONS = Object.freeze([
   'fail',
   'inconclusive',
 ]);
+
+export const GEP_EVIDENCE_MODES = Object.freeze(['reference_only']);
