@@ -1,7 +1,7 @@
 # GEP: Genome Evolution Protocol
 
 **Version:** 1.0.0
-**Schema Version:** 1.13.0
+**Schema Version:** 1.14.0
 **Status:** Draft
 **Date:** 2026-06-26
 
@@ -127,6 +127,7 @@ A Capsule is the record of a single successful evolution. It captures what trigg
 | `gene_library_version` | string | no | Snapshot of the gene library version that produced this capsule |
 | `env_fingerprint` | object | no | Runtime environment snapshot |
 | `source_type` | enum | no | `"generated"`, `"reused"`, or `"reference"` — origin of the capsule (mirrors EvolutionEvent.source_type) |
+| `evidence_mode` | enum | no | `"reference_only"` opts into the non-execution evidence contract; omitted preserves legacy/execution behavior |
 | `reused_asset_id` | string | no | If `source_type="reused"`, the asset_id this capsule was reused from |
 | `content` | object | no | Optional payload — when present, carries the materialized artifact (skill, tool config, etc.) the gene produced |
 | `diff` | object | no | Optional structured diff of what changed during execution |
@@ -138,6 +139,8 @@ A Capsule is the record of a single successful evolution. It captures what trigg
 | `derivation_tokens` | object\|null | no | Real measured token cost of deriving this capsule `{input_tokens, output_tokens, total_tokens, basis}`, captured from the proxy trace meter at solidify time; `null` when usage was unobserved. Distinct from the point-in-time `cost_tokens`/`cost_usd` scalars |
 | `trigger_context` | object | no | Optional `{prompt, reasoning_trace, context_signals[], session_id, agent_model}` — what the user/agent was doing when this evolution fired |
 | `asset_id` | string | yes | Content-addressable hash |
+
+> **Non-execution reference gate.** When `evidence_mode` is `"reference_only"`, the Capsule records a reference without claiming execution. `source_type` MUST be `"reference"`; `blast_radius` MUST be exactly `{ "files": 0, "lines": 0 }`; `execution_trace` MUST be `[]`; `diff` MUST be absent or `null`; `content.text` MUST be non-empty; and `content.mime` MUST be `"text/plain"`. `proof_of_work` MUST contain `kind: "artifact_hash"` plus `artifact_hash.sha256`, `artifact_hash.mime`, and `artifact_hash.size`; `artifact_hash.mime` MUST be `"text/plain"` and equal `content.mime`. The SHA-256 is lowercase hexadecimal over the UTF-8 bytes of `content.text`, and `size` is that byte length. Omitting `evidence_mode` preserves legacy/execution behavior.
 
 > **Capsule.outcome wire-format gate.** When publishing to the EvoMap Hub, only
 > `outcome.status` and `outcome.score` participate in `asset_id` recomputation.

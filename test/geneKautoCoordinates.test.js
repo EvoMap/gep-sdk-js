@@ -50,8 +50,8 @@ function baseGene(overrides = {}) {
   };
 }
 
-test('schema bumped to 1.13.0', () => {
-  assert.equal(SCHEMA_VERSION, '1.13.0');
+test('schema includes 1.13.0 coordinates in the current 1.14.0 contract', () => {
+  assert.equal(SCHEMA_VERSION, '1.14.0');
 });
 
 test('schema: claims/scope/runtime_profile/verifier_profile are optional', () => {
@@ -94,7 +94,7 @@ test('asset_id byte-stability: a legacy gene with no coordinate keys is unchange
   // the schema must not alter its canonical form or asset_id — absent keys
   // never enter canonicalization (spec §5). Pinned constant guards against a
   // future canonicalize() change silently re-hashing the entire corpus.
-  const legacy = baseGene();
+  const legacy = baseGene({ schema_version: '1.13.0' });
   assert.equal(
     computeAssetId(legacy),
     'sha256:c4bece55c5d3a60af89cc727306c4969494b8bb65c5b10debc55646d64d1cfdb',
