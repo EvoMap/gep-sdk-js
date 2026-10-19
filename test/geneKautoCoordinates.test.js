@@ -50,8 +50,8 @@ function baseGene(overrides = {}) {
   };
 }
 
-test('schema includes 1.13.0 coordinates in the current 1.14.0 contract', () => {
-  assert.equal(SCHEMA_VERSION, '1.14.0');
+test('schema includes 1.13.0 coordinates in the current 1.15.0 contract', () => {
+  assert.equal(SCHEMA_VERSION, '1.15.0');
 });
 
 test('schema: claims/scope/runtime_profile/verifier_profile are optional', () => {
