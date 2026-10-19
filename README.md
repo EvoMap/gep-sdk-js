@@ -142,6 +142,14 @@ deployment on 1.2.x and need to remain on the GPL line, those releases
 remain available on npm; new fixes will be backported only on a
 best-effort basis.
 
+### Asset lineage
+
+Gene and Capsule support optional `parent`, a canonical `sha256:` asset ID of the
+asset directly used as their source. Set it before `computeAssetId`; a fetch alone
+does not establish parentage. Omit unknown parents and preserve old asset bytes
+and IDs. Readers/Hub validators must support schema 1.15.0 before new writers emit
+the field. This is independent of the EvolutionEvent event-chain `parent`.
+
 ### Non-execution reference Capsules
 
 A Capsule may opt into `evidence_mode: "reference_only"` to record material that
