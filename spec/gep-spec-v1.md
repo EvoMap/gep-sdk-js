@@ -1,7 +1,7 @@
 # GEP: Genome Evolution Protocol
 
 **Version:** 1.0.0
-**Schema Version:** 1.14.0
+**Schema Version:** 1.15.0
 **Status:** Draft
 **Date:** 2026-06-26
 
@@ -50,6 +50,21 @@ a2a wire envelope; see §2.7.
 
 ### 2.1 Gene
 
+Gene and Capsule MAY declare `parent`, the content-addressed ID of an existing
+asset from which the new asset directly derives. It MUST be a 71-character string
+matching `^sha256:[a-f0-9]{64}$`. Omit it when no direct parent is known; `null`,
+empty strings, logical IDs and arrays are invalid. A search or fetch alone does
+not establish derivation, and multiple sources MUST NOT be resolved by guessing
+the last fetched asset. The field does not grant trust, execution evidence or
+economic attribution. It is distinct from `EvolutionEvent.parent` (event chain).
+
+The producer MUST set `parent` before computing the final `asset_id`; changing it
+invalidates that ID. A pure fetch or relay MUST preserve the original payload,
+parent and asset ID. Stored assets without parent retain their original bytes,
+schema version and hash; inferred historical links belong in a separate index,
+not in a rewritten payload. Deploy compatible readers/validators before enabling
+writers: older strict schemas reject the new field.
+
 A Gene is a reusable evolution strategy. It defines what signals it responds to, what steps to follow, and what safety constraints apply.
 
 | Field | Type | Required | Description |
@@ -57,6 +72,7 @@ A Gene is a reusable evolution strategy. It defines what signals it responds to,
 | `type` | string | yes | Always `"Gene"` |
 | `schema_version` | string | yes | Protocol schema version |
 | `id` | string | yes | Unique identifier, e.g. `gene_gep_repair_from_errors` |
+| `parent` | string | no | Canonical sha256 content ID of the direct source asset; see lineage rules above |
 | `category` | enum | yes | One of: `"repair"`, `"optimize"`, `"innovate"`, `"explore"` |
 | `signals_match` | string[] | yes | Patterns that trigger this gene (see pattern format below) |
 | `preconditions` | string[] | no | Human-readable conditions that must hold |
@@ -116,6 +132,7 @@ A Capsule is the record of a single successful evolution. It captures what trigg
 | `type` | string | yes | Always `"Capsule"` |
 | `schema_version` | string | yes | Protocol schema version |
 | `id` | string | yes | Unique identifier, e.g. `capsule_1708123456789` |
+| `parent` | string | no | Canonical sha256 content ID of the direct source asset; see §2.1 lineage rules |
 | `trigger` | string[] | yes | Signals that triggered this evolution |
 | `gene` | string | yes | ID of the gene that was used |
 | `summary` | string | yes | Human-readable description of what was done |
@@ -702,6 +719,14 @@ Enhanced inference adjusts the base score by:
 ---
 
 ## Appendix C: Schema Version History
+
+### 1.15.0 — Explicit asset parent lineage
+
+Gene and Capsule add optional `parent` as specified in §2.1. Existing required
+fields and `additionalProperties: false` remain unchanged. The canonicalization
+and asset-ID algorithms are unchanged; only a newly authored payload containing
+parent (or a changed schema version) has a different content identity. Absence
+does not retroactively mutate existing assets or attest inferred lineage.
 
 ### 1.13.0 (2026-08-15)
 

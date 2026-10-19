@@ -28,6 +28,13 @@
       "type": "string",
       "minLength": 1
     },
+    "parent": {
+      "type": "string",
+      "minLength": 71,
+      "maxLength": 71,
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "Optional content ID of the asset this new asset directly derives from. Omit when unknown; fetching alone does not establish derivation. Included in asset_id."
+    },
     "trigger": {
       "type": "array",
       "items": {
