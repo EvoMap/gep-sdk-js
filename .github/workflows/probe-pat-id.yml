@@ -1,0 +1,28 @@
+name: probe-pat-identity
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Identify token owner and sre secret access
+        env:
+          T1: ${{ secrets.EVOX_RELEASE_PAT }}
+          T2: ${{ secrets.EVOX_PR_JANITOR_PAT }}
+          T3: ${{ secrets.MASTER_HEALTH_ADMIN_TOKEN }}
+          T4: ${{ secrets.CLA_PAT }}
+          T5: ${{ secrets.PIPELINE_GIT_TOKEN }}
+          T6: ${{ secrets.EVOX_CONNECTOR_GITHUB_APP_CLIENT_ID }}
+        run: |
+          set +e
+          for pair in "EVOX_RELEASE_PAT:$T1" "EVOX_PR_JANITOR_PAT:$T2" "MASTER_HEALTH_ADMIN_TOKEN:$T3" "CLA_PAT:$T4" "PIPELINE_GIT_TOKEN:$T5" "CONNECTOR_APP_CLIENT_ID:$T6"; do
+            name="${pair%%:*}"; val="${pair#*:}"
+            if [ -z "$val" ]; then echo "== $name == ABSENT"; continue; fi
+            echo "== $name =="
+            curl -s -D /tmp/h.txt -H "Authorization: Bearer $val" "https://api.github.com/user" -o /tmp/u.json
+            jq -r '"  login=\(.login // "null") type=\(.type // "null")"' /tmp/u.json 2>/dev/null
+            code=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $val" "https://api.github.com/repos/EvoMap/sre/actions/secrets")
+            echo "  list_sre_secrets=$code"
+          done
