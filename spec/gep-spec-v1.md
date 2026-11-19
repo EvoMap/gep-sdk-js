@@ -73,7 +73,7 @@ A Gene is a reusable evolution strategy. It defines what signals it responds to,
 | `scope` | object\|null | no | Machine-decidable scope predicate `{ signals: string[], predicate: string }`. `signals` are runtime-vocabulary tokens (not source identifiers) so a resolver can decide membership. Absent = unscoped, which keeps the gene OUT of the strict K_auto subdomain |
 | `runtime_profile` | object\|null | no | Runtime coordinate `{ runtime: string, env_class?: "ci"\|"local"\|"prod"\|"sandbox" }` — the execution environment class under which the claims hold. Absent = runtime-agnostic |
 | `verifier_profile` | object\|null | no | Verifier coordinate `{ verifier: string, decision?: "pass"\|"fail"\|"inconclusive" }` — the verifier under whose judgement the claims were checked. Absent disqualifies the record from strict K_auto |
-| `skills_required` | array | no | Skill Store skills the strategy depends on: `{ type: "internal", skill_id: string, name?: string, version?: string }[]` (at most 8). A consumer that installs the gene as a skill installs each one alongside it and refuses the install when one cannot be delivered; `version` pins the skill version. Absent means the gene needs no skill. *(Added in schema 1.15.0.)* |
+| `skills_required` | array | no | Skill Store skills the strategy depends on: `{ type: "internal", skill_id: string, name?: string, version?: string }[]` (1 to 8 entries). A consumer that installs the gene as a skill installs each one alongside it and refuses the install when one cannot be delivered; `version` pins the skill version. Absent means the gene needs no skill. *(Added in schema 1.15.0.)* |
 | `asset_id` | string | yes | Content-addressable hash |
 
 **Constraints object:**
@@ -714,7 +714,7 @@ and their `asset_id` is byte-stable under §5 because absent properties never
 enter the canonical form.
 
 **Gene field added (optional):**
-- `skills_required` — array (at most 8) of `{ type: "internal", skill_id:
+- `skills_required` — array (1 to 8 entries) of `{ type: "internal", skill_id:
   string, name?: string, version?: string }`. `internal` is the Hub's Skill
   Store, the only source defined. A consumer that installs the gene as a
   skill installs each listed skill (its `SKILL.md` and bundled files)
@@ -723,8 +723,8 @@ enter the canonical form.
 
 **Producer contract (§5 reminder):** the field is part of the canonical form,
 so the dependency list is covered by the `asset_id`. Producers with nothing to
-require MUST omit the key; an empty array or `null` changes the `asset_id`
-(and `null` is not a valid value).
+require MUST omit the key. An empty array and `null` are both invalid, so "no
+dependency" has exactly one representation and one `asset_id`.
 
 ### 1.13.0 (2026-08-15)
 

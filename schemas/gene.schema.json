@@ -135,8 +135,9 @@
     },
     "skills_required": {
       "type": "array",
+      "minItems": 1,
       "maxItems": 8,
-      "description": "Optional Skill Store skills this gene's strategy depends on. A consumer that installs the gene as a skill installs each listed skill (its SKILL.md and bundled files) alongside it, and refuses the install when one of them cannot be delivered. Absent means the gene needs no skill. Producers with nothing to require MUST omit the key rather than send an empty array, because that changes the asset_id.",
+      "description": "Optional Skill Store skills this gene's strategy depends on. A consumer that installs the gene as a skill installs each listed skill (its SKILL.md and bundled files) alongside it, and refuses the install when one of them cannot be delivered. Absent means the gene needs no skill. Producers with nothing to require MUST omit the key; an empty array is invalid.",
       "items": {
         "type": "object",
         "required": ["type", "skill_id"],

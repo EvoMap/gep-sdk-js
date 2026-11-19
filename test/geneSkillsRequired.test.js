@@ -40,7 +40,7 @@ function gene(overrides = {}) {
 test('schema: skills_required is an optional, bounded array of strict Skill Store references', () => {
   assert.ok(!SCHEMA.required.includes('skills_required'));
   assert.equal(FIELD.type, 'array');
-  assert.equal(FIELD.maxItems, 8);
+  assert.deepEqual([FIELD.minItems, FIELD.maxItems], [1, 8]);
   assert.deepEqual(FIELD.items.required, ['type', 'skill_id']);
   assert.equal(FIELD.items.additionalProperties, false);
   assert.deepEqual(Object.keys(FIELD.items.properties).sort(), ['name', 'skill_id', 'type', 'version']);
