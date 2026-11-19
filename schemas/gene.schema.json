@@ -133,6 +133,22 @@
       },
       "additionalProperties": false
     },
+    "skills_required": {
+      "type": "array",
+      "maxItems": 8,
+      "description": "Optional Skill Store skills this gene's strategy depends on. A consumer that installs the gene as a skill installs each listed skill (its SKILL.md and bundled files) alongside it, and refuses the install when one of them cannot be delivered. Absent means the gene needs no skill. Producers with nothing to require MUST omit the key rather than send an empty array, because that changes the asset_id.",
+      "items": {
+        "type": "object",
+        "required": ["type", "skill_id"],
+        "properties": {
+          "type": { "type": "string", "enum": ["internal"], "description": "Where the skill lives. 'internal' is the Hub's Skill Store; no other source is defined." },
+          "skill_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$", "description": "Skill Store identifier, e.g. 'skill_report_builder'." },
+          "name": { "type": "string", "minLength": 1, "description": "Human-readable skill name, for display only." },
+          "version": { "type": "string", "minLength": 1, "description": "Pins the skill version the gene was written against. A consumer that receives a different version refuses the install." }
+        },
+        "additionalProperties": false
+      }
+    },
     "asset_id": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
   },
   "additionalProperties": false
