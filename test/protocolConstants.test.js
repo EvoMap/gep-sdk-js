@@ -24,6 +24,10 @@ import {
   GEP_OUTCOME_STATUSES,
   GEP_RISK_LEVELS,
   GEP_SOURCE_TYPES,
+  GEP_SWARM_HANDOFF_STAGES,
+  GEP_WORK_ORDER_FUNDING_MODES,
+  GEP_WORK_ORDER_TIERS,
+  GEP_WORK_ORDER_TIER_FLOORS,
 } from '../src/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -65,4 +69,17 @@ test('GEP_SOURCE_TYPES matches Capsule and EvolutionEvent schemas', () => {
 test('GEP_RISK_LEVELS matches mutation schema risk enum', () => {
   const schema = readSchema('mutation.schema.json');
   assert.deepEqual(GEP_RISK_LEVELS, schema.properties.risk_level.enum);
+});
+
+test('WorkOrder v1 task schema enums and tier floors match exported protocol constants', () => {
+  const schema = readSchema('task.schema.json');
+  assert.deepEqual(GEP_WORK_ORDER_TIERS, schema.properties.tier.enum);
+  assert.deepEqual(GEP_WORK_ORDER_FUNDING_MODES, schema.properties.compute_funding_mode.enum);
+  assert.deepEqual(GEP_SWARM_HANDOFF_STAGES, schema.properties.handoff_stage.enum);
+  assert.deepEqual(Object.keys(GEP_WORK_ORDER_TIER_FLOORS), [...GEP_WORK_ORDER_TIERS]);
+  assert.deepEqual(GEP_WORK_ORDER_TIER_FLOORS.standard, {
+    compute_min_credits: 120,
+    labor_min_credits: 30,
+    max_iterations: 24,
+  });
 });
