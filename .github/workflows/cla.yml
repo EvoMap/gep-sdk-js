@@ -31,7 +31,7 @@ jobs:
           path-to-signatures: 'signatures/cla.json'
           path-to-document: 'https://github.com/EvoMap/gep-sdk-js/blob/master/CLA/ICLA.md'
           branch: 'cla-signatures'
-          allowlist: dependabot[bot],renovate[bot]
+          allowlist: dependabot[bot],renovate[bot],imxyanua
           remote-organization-name: EvoMap
           remote-repository-name: gep-sdk-cla-signatures
           custom-notsigned-prcomment: |
