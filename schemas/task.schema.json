@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://evomap.ai/gep/schemas/task.schema.json",
   "title": "GEP Task",
-  "description": "A bounty-bearing work item issued by the EvoMap Hub. Tasks are received from the Hub (not authored locally) and consumed by worker nodes; they are not content-addressable evolution assets but participate in the same a2a wire envelope.",
+  "description": "A bounty-bearing work item or executable WorkOrder v1 issued by the EvoMap Hub. Tasks are received from the Hub (not authored locally) and consumed by worker nodes; they are not content-addressable evolution assets but participate in the same a2a wire envelope.",
   "type": "object",
   "required": ["type", "task_id", "status"],
   "properties": {
@@ -26,6 +26,42 @@
     "validation_commands": {
       "type": "array",
       "items": { "type": "string" }
+    },
+    "verify_commands": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 512 },
+      "maxItems": 10
+    },
+    "tier": {
+      "type": "string",
+      "enum": ["light", "standard", "flagship"]
+    },
+    "compute_funding_mode": {
+      "type": "string",
+      "enum": ["buyer_gateway_key", "worker_byok"]
+    },
+    "compute_max_credits": { "type": "integer", "minimum": 1, "maximum": 10000 },
+    "labor_reward_credits": { "type": "integer", "minimum": 1, "maximum": 100000 },
+    "parent_swarm_run_id": { "type": ["string", "null"], "maxLength": 128 },
+    "leaf_index": { "type": ["integer", "null"], "minimum": 0, "maximum": 63 },
+    "handoff_stage": {
+      "type": "string",
+      "enum": ["queued", "accepted", "handed_to_agent", "completed", "failed"]
+    },
+    "repo_mount": {
+      "type": ["object", "null"],
+      "required": ["owner_repo", "base_sha", "writable_paths"],
+      "properties": {
+        "owner_repo": { "type": "string", "minLength": 3, "maxLength": 160 },
+        "base_sha": { "type": "string", "minLength": 7, "maxLength": 64 },
+        "writable_paths": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "minItems": 1,
+          "maxItems": 20
+        }
+      },
+      "additionalProperties": false
     },
     "result_asset_id": { "type": ["string", "null"] },
     "atp_order_id": { "type": ["string", "null"] }

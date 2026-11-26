@@ -76,3 +76,21 @@ export const GEP_GENE_VERIFIER_DECISIONS: readonly [
 ];
 
 export declare const GEP_EVIDENCE_MODES: readonly ['reference_only'];
+
+export declare const GEP_WORK_ORDER_TIERS: readonly ['light', 'standard', 'flagship'];
+
+export declare const GEP_WORK_ORDER_FUNDING_MODES: readonly ['buyer_gateway_key', 'worker_byok'];
+
+export declare const GEP_SWARM_HANDOFF_STAGES: readonly [
+  'queued',
+  'accepted',
+  'handed_to_agent',
+  'completed',
+  'failed',
+];
+
+export declare const GEP_WORK_ORDER_TIER_FLOORS: Readonly<{
+  light: Readonly<{ compute_min_credits: 25; labor_min_credits: 10; max_iterations: 12 }>;
+  standard: Readonly<{ compute_min_credits: 120; labor_min_credits: 30; max_iterations: 24 }>;
+  flagship: Readonly<{ compute_min_credits: 400; labor_min_credits: 80; max_iterations: 40 }>;
+}>;

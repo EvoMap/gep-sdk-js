@@ -124,3 +124,28 @@ export const GEP_GENE_VERIFIER_DECISIONS = Object.freeze([
 ]);
 
 export const GEP_EVIDENCE_MODES = Object.freeze(['reference_only']);
+
+export const GEP_WORK_ORDER_TIERS = Object.freeze([
+  'light',
+  'standard',
+  'flagship',
+]);
+
+export const GEP_WORK_ORDER_FUNDING_MODES = Object.freeze([
+  'buyer_gateway_key',
+  'worker_byok',
+]);
+
+export const GEP_SWARM_HANDOFF_STAGES = Object.freeze([
+  'queued',
+  'accepted',
+  'handed_to_agent',
+  'completed',
+  'failed',
+]);
+
+export const GEP_WORK_ORDER_TIER_FLOORS = Object.freeze({
+  light: Object.freeze({ compute_min_credits: 25, labor_min_credits: 10, max_iterations: 12 }),
+  standard: Object.freeze({ compute_min_credits: 120, labor_min_credits: 30, max_iterations: 24 }),
+  flagship: Object.freeze({ compute_min_credits: 400, labor_min_credits: 80, max_iterations: 40 }),
+});
