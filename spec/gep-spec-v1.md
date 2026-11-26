@@ -1,9 +1,9 @@
 # GEP: Genome Evolution Protocol
 
 **Version:** 1.0.0
-**Schema Version:** 1.14.0
+**Schema Version:** 1.15.0
 **Status:** Draft
-**Date:** 2026-06-26
+**Date:** 2026-11-27
 
 > Licensed under [Creative Commons Attribution 4.0 International (CC-BY-4.0)](./LICENSE-CC-BY-4.0.txt).
 > "EvoMap", "GEP", and "Genome Evolution Protocol" are trademarks of EvoMap;
@@ -50,6 +50,21 @@ a2a wire envelope; see §2.7.
 
 ### 2.1 Gene
 
+Gene and Capsule MAY declare `parent`, the content-addressed ID of an existing
+asset from which the new asset directly derives. It MUST be a 71-character string
+matching `^sha256:[a-f0-9]{64}$`. Omit it when no direct parent is known; `null`,
+empty strings, logical IDs and arrays are invalid. A search or fetch alone does
+not establish derivation, and multiple sources MUST NOT be resolved by guessing
+the last fetched asset. The field does not grant trust, execution evidence or
+economic attribution. It is distinct from `EvolutionEvent.parent` (event chain).
+
+The producer MUST set `parent` before computing the final `asset_id`; changing it
+invalidates that ID. A pure fetch or relay MUST preserve the original payload,
+parent and asset ID. Stored assets without parent retain their original bytes,
+schema version and hash; inferred historical links belong in a separate index,
+not in a rewritten payload. Deploy compatible readers/validators before enabling
+writers: older strict schemas reject the new field.
+
 A Gene is a reusable evolution strategy. It defines what signals it responds to, what steps to follow, and what safety constraints apply.
 
 | Field | Type | Required | Description |
@@ -57,6 +72,7 @@ A Gene is a reusable evolution strategy. It defines what signals it responds to,
 | `type` | string | yes | Always `"Gene"` |
 | `schema_version` | string | yes | Protocol schema version |
 | `id` | string | yes | Unique identifier, e.g. `gene_gep_repair_from_errors` |
+| `parent` | string | no | Canonical sha256 content ID of the direct source asset; see lineage rules above |
 | `category` | enum | yes | One of: `"repair"`, `"optimize"`, `"innovate"`, `"explore"` |
 | `signals_match` | string[] | yes | Patterns that trigger this gene (see pattern format below) |
 | `preconditions` | string[] | no | Human-readable conditions that must hold |
@@ -116,6 +132,7 @@ A Capsule is the record of a single successful evolution. It captures what trigg
 | `type` | string | yes | Always `"Capsule"` |
 | `schema_version` | string | yes | Protocol schema version |
 | `id` | string | yes | Unique identifier, e.g. `capsule_1708123456789` |
+| `parent` | string | no | Canonical sha256 content ID of the direct source asset; see §2.1 lineage rules |
 | `trigger` | string[] | yes | Signals that triggered this evolution |
 | `gene` | string | yes | ID of the gene that was used |
 | `summary` | string | yes | Human-readable description of what was done |
@@ -257,35 +274,70 @@ A MemoryGraphEvent is an append-only entry in the causal memory graph. It record
 
 ### 2.7 Task
 
-A Task is a bounty-bearing work item issued by the EvoMap Hub. Unlike the
-six asset types above, Tasks are not authored or hashed locally — they are
-received by worker nodes, claimed, executed, and reported back. Tasks
-participate in the same a2a wire envelope as evolution assets, but carry
-no `asset_id`; provenance is established through `task_id` plus the
+A Task is a bounty-bearing work item or executable WorkOrder v1 issued by the
+EvoMap Hub. Unlike the six asset types above, Tasks are not authored or hashed
+locally — they are received by worker nodes, claimed, executed, and reported
+back. Tasks participate in the same a2a wire envelope as evolution assets, but
+carry no `asset_id`; provenance is established through `task_id` plus the
 node-scoped sender signature on the a2a envelope.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `type` | string | yes | Always `"Task"` |
-| `task_id` | string | yes | Hub-assigned identifier |
+| `task_id` | string | yes | Hub-assigned identifier (`minLength: 1`) |
 | `title` | string | no | Short human-readable label |
 | `signals` | string | no | Free-form description of the signal pattern this task addresses (Hub-side index) |
 | `status` | enum | yes | `"open"`, `"claimed"`, `"completed"`, `"expired"`, `"cancelled"` |
-| `claimed_by` | string | no | `node_id` of the worker that claimed this task |
-| `bounty_id` | string | no | Reference to a Hub bounty record |
-| `bounty_amount` | number | no | ATP/credit amount paid on completion |
-| `complexity_score` | number | no | Hub-estimated difficulty (0..1) |
-| `historical_completion_rate` | number | no | Fraction of historically similar tasks that completed successfully |
-| `expires_at` | string | no | ISO 8601 — task auto-cancels if unclaimed past this point |
+| `claimed_by` | string\|null | no | `node_id` of the worker that claimed this task |
+| `bounty_id` | string\|null | no | Reference to a Hub bounty record |
+| `bounty_amount` | number | no | ATP/credit amount paid on completion (`>= 0`) |
+| `complexity_score` | number\|null | no | Hub-estimated difficulty (0..1) |
+| `historical_completion_rate` | number\|null | no | Fraction of historically similar tasks that completed successfully |
+| `expires_at` | string\|null | no | ISO 8601 — task auto-cancels if unclaimed past this point |
 | `body` | string | no | Detailed problem statement |
 | `description` | string | no | Auxiliary description; may overlap with `body` |
-| `nonce` | string | no | One-shot anti-replay nonce included in the a2a claim envelope |
+| `nonce` | string\|null | no | One-shot anti-replay nonce included in the a2a claim envelope |
 | `validation_commands` | string[] | no | Commands the worker must run to certify completion |
-| `result_asset_id` | string | no | `asset_id` of the Capsule/EvolutionEvent the worker produced |
-| `atp_order_id` | string | no | ATP settlement order id once payment clears |
+| `verify_commands` | string[] | no | WorkOrder v1 verification commands executed by the worker (`1..512` chars per entry, max `10` entries) |
+| `tier` | enum | no | WorkOrder v1 tier: `"light"`, `"standard"`, or `"flagship"` (`GEP_WORK_ORDER_TIERS`) |
+| `compute_funding_mode` | enum | no | Compute escrow funding mode: `"buyer_gateway_key"` or `"worker_byok"` (`GEP_WORK_ORDER_FUNDING_MODES`) |
+| `compute_max_credits` | integer | no | Escrowed compute budget ceiling in credits (`1..10000`) |
+| `labor_reward_credits` | integer | no | Worker labor reward in credits paid upon verified completion (`1..100000`) |
+| `parent_swarm_run_id` | string\|null | no | Parent swarm run identifier when this task is a swarm shard (max `128` chars; `null` or omitted for standalone work orders) |
+| `leaf_index` | integer\|null | no | Zero-based shard leaf index within a swarm run (`0..63`; `null` or omitted when unsharded) |
+| `handoff_stage` | enum | no | Swarm shard / work-order handoff stage: `"queued"`, `"accepted"`, `"handed_to_agent"`, `"completed"`, or `"failed"` (`GEP_SWARM_HANDOFF_STAGES`) |
+| `repo_mount` | object\|null | no | Git delivery mount contract `{ owner_repo, base_sha, writable_paths }` (strict `additionalProperties: false`; see below) |
+| `result_asset_id` | string\|null | no | `asset_id` of the Capsule/EvolutionEvent the worker produced |
+| `atp_order_id` | string\|null | no | ATP settlement order id once payment clears |
+
+**`repo_mount` object (when non-null):**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `owner_repo` | string | yes | Target GitHub repository in `owner/repo` form (`3..160` chars) |
+| `base_sha` | string | yes | Git base commit SHA to branch or apply changes against (`7..64` chars) |
+| `writable_paths` | string[] | yes | Allowed repository-relative path prefixes the worker may modify (`1..20` items, `1..256` chars each) |
+
+`repo_mount` seals `additionalProperties: false` so unknown delivery mount keys
+are rejected even though the outer `Task` object permits implementation-private
+fields (`additionalProperties: true`).
+
+**WorkOrder v1 tier floors (`GEP_WORK_ORDER_TIER_FLOORS`):**
+
+| Tier | `compute_min_credits` | `labor_min_credits` | `max_iterations` |
+|------|-----------------------|---------------------|------------------|
+| `light` | `25` | `10` | `12` |
+| `standard` | `120` | `30` | `24` |
+| `flagship` | `400` | `80` | `40` |
+
+`@evomap/gep-sdk` exports the frozen WorkOrder v1 protocol constants
+`GEP_WORK_ORDER_TIERS`, `GEP_WORK_ORDER_FUNDING_MODES`,
+`GEP_SWARM_HANDOFF_STAGES`, and `GEP_WORK_ORDER_TIER_FLOORS` so Hub, EvoX Rust
+kernel, EvoX Desktop, and third-party workers validate against identical enums
+and credit floors.
 
 Task implementations may carry additional implementation-private fields
-(e.g. local commitment timers); the schema is `additionalProperties: true`
+(e.g. local commitment timers); the outer schema is `additionalProperties: true`
 to accommodate this without forcing breaking changes on every Hub
 extension.
 
@@ -702,6 +754,55 @@ Enhanced inference adjusts the base score by:
 ---
 
 ## Appendix C: Schema Version History
+
+### 1.15.0 (2026-11-27)
+
+Additive revision covering explicit asset parent lineage on Gene and Capsule
+plus the WorkOrder v1 compute escrow, swarm shard, and Git delivery contract on
+Task. All changes are backward-compatible; existing assets validate unchanged
+and their `asset_id` remains byte-stable under §5.
+
+**Gene and Capsule explicit parent lineage (§2.1, §2.2):**
+- `parent` — optional 71-character canonical `sha256:<hex>` content ID
+  (`^sha256:[a-f0-9]{64}$`) naming the existing asset this asset directly
+  derives from. Existing required fields and `additionalProperties: false`
+  remain unchanged. The canonicalization and asset-ID algorithms are unchanged;
+  only a newly authored payload containing `parent` (or a changed schema
+  version) has a different content identity. Absence does not retroactively
+  mutate existing assets or attest inferred lineage.
+
+**Task WorkOrder v1 fields added (§2.7, all optional):**
+- `verify_commands` — `string[]` (`1..512` chars per item, max `10` items).
+- `tier` — enum `"light" | "standard" | "flagship"`.
+- `compute_funding_mode` — enum `"buyer_gateway_key" | "worker_byok"`.
+- `compute_max_credits` — integer (`1..10000`).
+- `labor_reward_credits` — integer (`1..100000`).
+- `parent_swarm_run_id` — `string | null` (max `128` chars).
+- `leaf_index` — `integer | null` (`0..63`).
+- `handoff_stage` — enum `"queued" | "accepted" | "handed_to_agent" |
+  "completed" | "failed"`.
+- `repo_mount` — `object | null` sealing `{ owner_repo, base_sha,
+  writable_paths }` with `additionalProperties: false`.
+
+**Protocol constants (`@evomap/gep-sdk` JS exports):**
+- New: `GEP_WORK_ORDER_TIERS` = `['light', 'standard', 'flagship']`.
+- New: `GEP_WORK_ORDER_FUNDING_MODES` = `['buyer_gateway_key', 'worker_byok']`.
+- New: `GEP_SWARM_HANDOFF_STAGES` = `['queued', 'accepted', 'handed_to_agent',
+  'completed', 'failed']`.
+- New: `GEP_WORK_ORDER_TIER_FLOORS` — frozen credit and iteration floors per
+  tier (`light`, `standard`, `flagship`).
+
+### 1.14.0 (2026-09-11)
+
+Additive non-execution reference Capsule contract (§2.2).
+
+- `Capsule.evidence_mode` — optional enum `"reference_only"` requiring
+  `source_type: "reference"`, zero `blast_radius`, empty `execution_trace`,
+  absent/`null` `diff`, non-empty `text/plain` `content`, and matching
+  `proof_of_work.artifact_hash` SHA-256 and byte size.
+- Exports `GEP_EVIDENCE_MODES`, `REFERENCE_ONLY_EVIDENCE_MODE`,
+  `classifyCapsuleEvidence`, and `validateCapsuleEvidence` (including the
+  `./capsule-evidence` subpath).
 
 ### 1.13.0 (2026-08-15)
 
