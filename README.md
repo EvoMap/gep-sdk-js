@@ -22,10 +22,12 @@ copies.
 | `schemas/capsule.schema.json` | Capsule asset schema |
 | `schemas/evolution-event.schema.json` | EvolutionEvent asset schema |
 | `schemas/mutation.schema.json` | Mutation asset schema |
-| `schemas/task.schema.json` | Task asset schema (bounty work items) |
+| `schemas/task.schema.json` | Task & WorkOrder v1 schema (bounty work items, compute escrow, swarm shards, Git delivery) |
+| `schemas/recipe.schema.json` | Recipe asset schema (ordered Gene/Capsule step sequences) |
+| `schemas/pack.schema.json` | Pack asset schema (curated Gene whitelist bundles) |
 | `spec/gep-spec-v1.md` | Full protocol specification |
 | `src/contentHash.js` | `SCHEMA_VERSION`, `canonicalize`, `computeAssetId`, `verifyAssetId` |
-| `src/protocolConstants.js` | Shared protocol enums such as `GEP_GENE_CATEGORIES`, `GEP_OUTCOME_STATUSES`, and `GEP_EVIDENCE_MODES` |
+| `src/protocolConstants.js` | Shared protocol enums and floors (`GEP_GENE_CATEGORIES`, `GEP_OUTCOME_STATUSES`, `GEP_EVIDENCE_MODES`, `GEP_WORK_ORDER_*`, `GEP_SWARM_HANDOFF_STAGES`) |
 | `src/capsuleEvidence.js` | Pure legacy/reference-only Capsule classifier and evidence hash validator |
 
 ## Install
@@ -159,3 +161,25 @@ blast radius, an empty `execution_trace`, non-empty `content.text`, and an
 Use `classifyCapsuleEvidence` (also exported as `validateCapsuleEvidence`) for
 a pure structured validation result. Omitting `evidence_mode` preserves legacy
 Capsule behaviour.
+
+### WorkOrder v1 Tasks
+
+`schemas/task.schema.json` extends `Task` with the optional WorkOrder v1
+compute-escrow, swarm-shard, and Git-delivery contract shared across EvoMap Hub,
+EvoX Rust kernel, EvoX Desktop, and third-party workers:
+
+- **Compute escrow & reward:** `tier` (`"light" | "standard" | "flagship"`),
+  `compute_funding_mode` (`"buyer_gateway_key" | "worker_byok"`),
+  `compute_max_credits` (`1..10000`), `labor_reward_credits` (`1..100000`), and
+  `verify_commands` (up to `10` commands, `1..512` chars each).
+- **Swarm sharding & handoff:** `parent_swarm_run_id` (`string | null`, max
+  `128` chars), `leaf_index` (`0..63` or `null`), and `handoff_stage`
+  (`"queued" | "accepted" | "handed_to_agent" | "completed" | "failed"`).
+- **Git delivery mount:** `repo_mount` (`object | null`), requiring
+  `owner_repo` (`3..160` chars), `base_sha` (`7..64` chars), and
+  `writable_paths` (`1..20` entries, `1..256` chars each) with strict
+  `additionalProperties: false`.
+
+The root entrypoint exports the matching frozen constants
+`GEP_WORK_ORDER_TIERS`, `GEP_WORK_ORDER_FUNDING_MODES`,
+`GEP_SWARM_HANDOFF_STAGES`, and `GEP_WORK_ORDER_TIER_FLOORS`.
