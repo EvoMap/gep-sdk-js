@@ -89,7 +89,7 @@
         "contract_digest": { "type": "string", "minLength": 1 },
         "delivery_digest": { "type": "string", "minLength": 1 },
         "verifier_node_id": { "type": "string", "minLength": 1 },
-        "depth": { "type": "integer", "minimum": 0 },
+        "depth": { "type": "integer", "minimum": 1 },
         "issued_at": { "type": "string", "minLength": 1 },
         "attestation_digest": { "type": "string", "minLength": 1 }
       },
@@ -109,7 +109,7 @@
         "schema": { "type": "string", "const": "evomap.kya.attribute_proof.v1" },
         "proof_type": { "type": "string", "minLength": 1 },
         "issuer": { "type": "string", "minLength": 1 },
-        "max_spend_credits": { "type": "number", "minimum": 0 },
+        "max_spend_credits": { "type": "integer", "minimum": 1 },
         "expires_at": { "type": "string", "minLength": 1 },
         "proof_digest": { "type": "string", "minLength": 1 }
       },

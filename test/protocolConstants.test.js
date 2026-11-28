@@ -122,6 +122,8 @@ test('WorkOrder v1.1 delegation & privilege attenuation constants and task schem
   assert.equal(delegationAttestation.type, 'object');
   assert.equal(delegationAttestation.additionalProperties, false);
   assert.equal(delegationAttestation.properties.schema.const, GEP_ATTESTATION_SCHEMA);
+  assert.equal(delegationAttestation.properties.depth.type, 'integer');
+  assert.equal(delegationAttestation.properties.depth.minimum, 1);
   assert.deepEqual(Object.keys(delegationAttestation.properties), [
     'schema',
     'parent_task_id',
@@ -138,6 +140,8 @@ test('WorkOrder v1.1 delegation & privilege attenuation constants and task schem
   assert.equal(kyaAttestation.type, 'object');
   assert.equal(kyaAttestation.additionalProperties, false);
   assert.equal(kyaAttestation.properties.schema.const, GEP_KYA_PROOF_SCHEMA);
+  assert.equal(kyaAttestation.properties.max_spend_credits.type, 'integer');
+  assert.equal(kyaAttestation.properties.max_spend_credits.minimum, 1);
   assert.deepEqual(Object.keys(kyaAttestation.properties), [
     'schema',
     'proof_type',
