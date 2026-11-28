@@ -19,12 +19,17 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
+  GEP_ATTESTATION_SCHEMA,
+  GEP_DEFAULT_MAX_DELEGATION_DEPTH,
+  GEP_DELEGATION_POLICY_LAYERS,
   GEP_GENE_CATEGORIES,
+  GEP_KYA_PROOF_SCHEMA,
   GEP_MUTATION_CATEGORIES,
   GEP_OUTCOME_STATUSES,
   GEP_RISK_LEVELS,
   GEP_SOURCE_TYPES,
   GEP_SWARM_HANDOFF_STAGES,
+  GEP_VERIFICATION_MODES,
   GEP_WORK_ORDER_FUNDING_MODES,
   GEP_WORK_ORDER_TIERS,
   GEP_WORK_ORDER_TIER_FLOORS,
@@ -83,3 +88,63 @@ test('WorkOrder v1 task schema enums and tier floors match exported protocol con
     max_iterations: 24,
   });
 });
+
+test('WorkOrder v1.1 delegation & privilege attenuation constants and task schema properties', () => {
+  const schema = readSchema('task.schema.json');
+
+  assert.equal(Object.isFrozen(GEP_DELEGATION_POLICY_LAYERS), true);
+  assert.deepEqual(GEP_DELEGATION_POLICY_LAYERS, ['ceiling', 'human', 'agent', 'rar']);
+
+  assert.equal(Object.isFrozen(GEP_VERIFICATION_MODES), true);
+  assert.deepEqual(GEP_VERIFICATION_MODES, [
+    'direct_deterministic',
+    'sampled_zk_audit',
+    'economic_stake',
+    'escrow_clause',
+  ]);
+  assert.deepEqual(schema.properties.verification_mode.enum, GEP_VERIFICATION_MODES);
+
+  assert.equal(GEP_ATTESTATION_SCHEMA, 'evomap.workorder.attestation.v1');
+  assert.equal(GEP_KYA_PROOF_SCHEMA, 'evomap.kya.attribute_proof.v1');
+  assert.equal(GEP_DEFAULT_MAX_DELEGATION_DEPTH, 1);
+
+  assert.deepEqual(schema.properties.delegation_depth, {
+    type: 'integer',
+    minimum: 0,
+  });
+  assert.deepEqual(schema.properties.max_delegation_depth, {
+    type: 'integer',
+    minimum: 0,
+    default: GEP_DEFAULT_MAX_DELEGATION_DEPTH,
+  });
+
+  const delegationAttestation = schema.properties.delegation_attestation;
+  assert.equal(delegationAttestation.type, 'object');
+  assert.equal(delegationAttestation.additionalProperties, false);
+  assert.equal(delegationAttestation.properties.schema.const, GEP_ATTESTATION_SCHEMA);
+  assert.deepEqual(Object.keys(delegationAttestation.properties), [
+    'schema',
+    'parent_task_id',
+    'leaf_task_id',
+    'contract_digest',
+    'delivery_digest',
+    'verifier_node_id',
+    'depth',
+    'issued_at',
+    'attestation_digest',
+  ]);
+
+  const kyaAttestation = schema.properties.kya_attestation;
+  assert.equal(kyaAttestation.type, 'object');
+  assert.equal(kyaAttestation.additionalProperties, false);
+  assert.equal(kyaAttestation.properties.schema.const, GEP_KYA_PROOF_SCHEMA);
+  assert.deepEqual(Object.keys(kyaAttestation.properties), [
+    'schema',
+    'proof_type',
+    'issuer',
+    'max_spend_credits',
+    'expires_at',
+    'proof_digest',
+  ]);
+});
+

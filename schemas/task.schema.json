@@ -63,6 +63,58 @@
       },
       "additionalProperties": false
     },
+    "delegation_depth": { "type": "integer", "minimum": 0 },
+    "max_delegation_depth": { "type": "integer", "minimum": 0, "default": 1 },
+    "verification_mode": {
+      "type": "string",
+      "enum": ["direct_deterministic", "sampled_zk_audit", "economic_stake", "escrow_clause"]
+    },
+    "delegation_attestation": {
+      "type": "object",
+      "required": [
+        "schema",
+        "parent_task_id",
+        "leaf_task_id",
+        "contract_digest",
+        "delivery_digest",
+        "verifier_node_id",
+        "depth",
+        "issued_at",
+        "attestation_digest"
+      ],
+      "properties": {
+        "schema": { "type": "string", "const": "evomap.workorder.attestation.v1" },
+        "parent_task_id": { "type": "string", "minLength": 1 },
+        "leaf_task_id": { "type": "string", "minLength": 1 },
+        "contract_digest": { "type": "string", "minLength": 1 },
+        "delivery_digest": { "type": "string", "minLength": 1 },
+        "verifier_node_id": { "type": "string", "minLength": 1 },
+        "depth": { "type": "integer", "minimum": 0 },
+        "issued_at": { "type": "string", "minLength": 1 },
+        "attestation_digest": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "kya_attestation": {
+      "type": "object",
+      "required": [
+        "schema",
+        "proof_type",
+        "issuer",
+        "max_spend_credits",
+        "expires_at",
+        "proof_digest"
+      ],
+      "properties": {
+        "schema": { "type": "string", "const": "evomap.kya.attribute_proof.v1" },
+        "proof_type": { "type": "string", "minLength": 1 },
+        "issuer": { "type": "string", "minLength": 1 },
+        "max_spend_credits": { "type": "number", "minimum": 0 },
+        "expires_at": { "type": "string", "minLength": 1 },
+        "proof_digest": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
     "result_asset_id": { "type": ["string", "null"] },
     "atp_order_id": { "type": ["string", "null"] }
   },
