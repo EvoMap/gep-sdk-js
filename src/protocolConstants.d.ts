@@ -94,3 +94,24 @@ export declare const GEP_WORK_ORDER_TIER_FLOORS: Readonly<{
   standard: Readonly<{ compute_min_credits: 120; labor_min_credits: 30; max_iterations: 24 }>;
   flagship: Readonly<{ compute_min_credits: 400; labor_min_credits: 80; max_iterations: 40 }>;
 }>;
+
+export declare const GEP_DELEGATION_POLICY_LAYERS: readonly [
+  'ceiling',
+  'human',
+  'agent',
+  'rar',
+];
+
+export declare const GEP_VERIFICATION_MODES: readonly [
+  'direct_deterministic',
+  'sampled_zk_audit',
+  'economic_stake',
+  'escrow_clause',
+];
+
+export declare const GEP_ATTESTATION_SCHEMA: 'evomap.workorder.attestation.v1';
+
+export declare const GEP_KYA_PROOF_SCHEMA: 'evomap.kya.attribute_proof.v1';
+
+export declare const GEP_DEFAULT_MAX_DELEGATION_DEPTH: 1;
+
